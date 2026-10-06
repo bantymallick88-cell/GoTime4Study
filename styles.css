@@ -1427,67 +1427,324 @@ input[type="range"]::-webkit-slider-thumb {
 .spotify-embed { border-radius: var(--r-md); overflow: hidden; }
 
 /* ── Panel 2 : Rooms & Leaderboard ── */
+.ypt-live-pulse-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  padding: 3px 8px;
+  border-radius: var(--r-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: pulse 2s infinite ease-in-out;
+}
+
 .avatar-picker {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 4px 0;
+  padding: 6px 0;
 }
 .avatar-opt {
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   background: var(--bg-input);
-  border: 1px solid var(--stroke-soft);
+  border: 1.5px solid var(--stroke-soft);
   border-radius: var(--r-md);
-  padding: 6px 10px;
+  padding: 6px 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease);
 }
-.avatar-opt.sel { border-color: var(--accent-purple); box-shadow: 0 0 10px var(--accent-purple-glow); }
+.avatar-opt:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-emerald);
+}
+.avatar-opt.sel {
+  border-color: var(--accent-emerald);
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 14px var(--accent-emerald-glow);
+  transform: scale(1.08);
+}
 
 .room-actions-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 14px;
 }
 .join-row { display: flex; gap: 8px; }
+
+/* ── YPT Room Header & Top Status Summary Bar ── */
+.ypt-room-header-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: rgba(10, 14, 22, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
 
 .room-code-row {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 6px 0;
+  flex-wrap: wrap;
 }
 .room-code {
   font-family: var(--font-mono);
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  color: var(--accent-cyan);
+  letter-spacing: 0.15em;
+  color: var(--accent-amber);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 4px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
 }
-.member-list {
-  list-style: none;
+
+.ypt-room-topbar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ypt-status-pill {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  font-size: 0.76rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  justify-content: center;
 }
-.member {
+
+.pill-studying {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+.pill-break {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+.pill-offline {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-dim);
+}
+
+.status-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-studying {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse 1.8s infinite ease-in-out;
+}
+.dot-break {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+.dot-offline {
+  background: var(--text-mute);
+}
+
+/* ── YPT Room Members Grid & Cards ── */
+.ypt-room-members-section {
+  margin-top: 16px;
+}
+
+.ypt-member-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.ypt-member-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: var(--r-md);
-  background: var(--bg-input);
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: rgba(14, 18, 28, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  gap: 12px;
+  transition: all 0.22s var(--ease);
 }
-.status-dot {
-  width: 7px; height: 7px;
+
+.ypt-member-card:hover {
+  transform: translateY(-1px);
+  background: rgba(18, 24, 38, 0.95);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.ypt-member-card.is-me {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.ypt-member-card.status-studying {
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.18), 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.ypt-member-card.status-break {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.ypt-member-card.status-offline {
+  opacity: 0.78;
+}
+
+.ypt-member-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ypt-member-avatar-wrap {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.ypt-avatar-status-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  display: inline-block;
-  margin-right: 6px;
+  border: 2px solid #0a0e16;
 }
-.status-dot.studying { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
-.status-dot.break { background: var(--warn); }
-.status-dot.idle { background: var(--text-mute); }
+.ypt-avatar-status-badge.status-studying { background: #10b981; box-shadow: 0 0 6px #10b981; }
+.ypt-avatar-status-badge.status-break { background: #f59e0b; }
+.ypt-avatar-status-badge.status-offline { background: var(--text-mute); }
+
+.ypt-member-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ypt-member-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ypt-member-name {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ypt-you-tag {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--accent-emerald);
+  background: rgba(16, 185, 129, 0.15);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.ypt-member-subject-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ypt-subj-icon { font-size: 0.8rem; }
+.ypt-subj-name {
+  color: #a7f3d0;
+  font-weight: 600;
+}
+
+.ypt-member-status-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.ypt-badge-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--r-full);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.ypt-badge-pill.status-studying {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.ypt-badge-pill.status-break {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.ypt-badge-pill.status-offline {
+  color: var(--text-mute);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ypt-member-timer {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+@media (max-width: 600px) {
+  .ypt-room-topbar {
+    grid-template-columns: 1fr;
+  }
+  .ypt-member-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Leaderboard Segments */
 .seg {

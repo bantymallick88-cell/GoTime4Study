@@ -532,45 +532,76 @@
           <div id="spotifyEmbed" class="spotify-embed"></div>
         </section>
 
-        <!-- ── 2. Co-Study Rooms Panel ── -->
+        <!-- ── 2. Co-Study Rooms Panel (YPT Style) ── -->
         <section id="panelRoom" class="panel">
           <!-- Room Lobby -->
           <div id="roomLobby">
-            <h2>👥 Co-Study Live Rooms</h2>
-            <p class="hint-sm">Study together in real-time. Share room codes across browsers & tabs with zero signup.</p>
+            <div class="panel-header-row">
+              <h2>👥 Co-Study Live Rooms</h2>
+              <span class="ypt-live-pulse-badge">🔴 P2P LIVE SYNC</span>
+            </div>
+            <p class="hint-sm">Study together in real-time. Share room codes across browsers & tabs with instant live status syncing.</p>
             
-            <div class="form-group">
+            <div class="form-group" style="margin-top: 12px;">
               <label class="field-label" for="nicknameInput">Your Nickname</label>
               <input id="nicknameInput" class="txt-input" type="text" maxlength="16" placeholder="e.g. FocusMaster" />
             </div>
 
-            <p class="field-label">Choose Avatar</p>
+            <p class="field-label">Choose Study Avatar</p>
             <div id="avatarPicker" class="avatar-picker"></div>
 
             <div class="room-actions-grid">
-              <button id="btnCreateRoom" class="ctrl-btn primary small">＋ Create Room</button>
+              <button id="btnCreateRoom" class="ctrl-btn primary small">＋ Create New Room</button>
               <div class="join-row">
                 <input id="joinCode" class="txt-input" type="text" maxlength="6" placeholder="ROOM CODE" />
-                <button id="btnJoinRoom" class="ctrl-btn cyan small">Join</button>
+                <button id="btnJoinRoom" class="ctrl-btn cyan small">Join Room</button>
               </div>
             </div>
           </div>
 
-          <!-- Active Room View -->
+          <!-- Active Room View (YPT Style) -->
           <div id="roomView" hidden>
-            <div class="room-head">
-              <div>
-                <p class="field-label">Active Room Code</p>
-                <div class="room-code-row">
-                  <span id="roomCode" class="room-code">—</span>
-                  <button id="btnCopyCode" class="icon-btn sm" title="Copy room code">📋 Copy</button>
-                  <button id="btnLeaveRoom" class="text-btn danger">Leave</button>
+            <div class="ypt-room-header-card">
+              <div class="room-head">
+                <div>
+                  <span class="field-label-sm">ACTIVE STUDY ROOM</span>
+                  <div class="room-code-row">
+                    <span id="roomCode" class="room-code">—</span>
+                    <button id="btnCopyCode" class="icon-btn sm" title="Copy room code">📋 Copy</button>
+                    <button id="btnLeaveRoom" class="text-btn danger sm">Leave Room</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top Status Summary Bar: Total Studying • On Break • Offline -->
+              <div class="ypt-room-topbar" id="roomTopBar">
+                <div class="ypt-status-pill pill-studying">
+                  <span class="status-indicator-dot dot-studying"></span>
+                  <span class="status-count-text"><strong id="countStudying">0</strong> Studying 🔥</span>
+                </div>
+                <div class="ypt-status-pill pill-break">
+                  <span class="status-indicator-dot dot-break"></span>
+                  <span class="status-count-text"><strong id="countBreak">0</strong> On Break ☕</span>
+                </div>
+                <div class="ypt-status-pill pill-offline">
+                  <span class="status-indicator-dot dot-offline"></span>
+                  <span class="status-count-text"><strong id="countOffline">0</strong> Offline 💤</span>
                 </div>
               </div>
             </div>
-            <p class="field-label">Connected Members · Live Status</p>
-            <ul id="memberList" class="member-list"></ul>
-            <p class="hint-sm" id="roomNote">Live peer synchronization active via BroadcastChannel.</p>
+
+            <!-- Connected Room Members YPT Cards Grid -->
+            <div class="ypt-room-members-section">
+              <div class="panel-header-row" style="margin-bottom: 8px;">
+                <span class="field-label">STUDY MEMBERS · REAL-TIME SYNC</span>
+                <span class="hint-sm" id="roomMemberCount">1 Member</span>
+              </div>
+              
+              <div id="memberList" class="ypt-member-cards-grid">
+                <!-- Dynamically injected YPT member cards -->
+              </div>
+              <p class="hint-sm" id="roomNote" style="margin-top:10px;text-align:center;">⚡ Real-time timer & active subject sync across tabs & browsers active.</p>
+            </div>
           </div>
 
           <div class="section-divider"></div>

@@ -608,42 +608,183 @@ const Timer = (() => {
 })();
 
 /* ════════════════════════════════════════════════════════════
-   7. ROOMS — anonymous group study (BroadcastChannel + localStorage)
+   7. ROOMS — YPT-style live co-study rooms with real-time sync
    ════════════════════════════════════════════════════════════ */
 const Rooms = (() => {
   const CH = 'gt4s_rooms_v1';
   const LS = 'gt4s_room_state';
   let channel = null, room = null, me = null, focusBuffer = 0;
   let members = {};
+  let tickerInterval = null;
 
   function code() {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
     return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   }
+
+  function getMyStatus() {
+    if (!Timer.running) {
+      return (Timer.mode === 'short' || Timer.mode === 'long') ? 'break' : 'offline';
+    }
+    if (Timer.mode === 'focus' || Timer.mode === 'custom' || Timer.mode === 'stopwatch') {
+      return 'studying';
+    }
+    return 'break';
+  }
+
   function publish() {
     if (!room || !me) return;
+    me.subject = (Store.d.subject || 'General Focus').trim() || 'General Focus';
+    me.status = getMyStatus();
+    me.timerRunning = Timer.running;
+    me.timerMode = Timer.mode;
+    me.left = Timer.left;
+    me.total = Timer.total;
+    me.ts = Date.now();
+    members[me.id] = { ...me };
+
     const msg = { type: 'state', room, peer: me };
-    channel?.postMessage(msg);
+    try { channel?.postMessage(msg); } catch {}
     try { localStorage.setItem(LS, JSON.stringify(msg)); } catch {}
     render();
   }
+
   function prune() {
-    const cutoff = Date.now() - 12000;
-    Object.keys(members).forEach((id) => { if (members[id].ts < cutoff) delete members[id]; });
+    const now = Date.now();
+    Object.keys(members).forEach((id) => {
+      if (id === me?.id) return;
+      const m = members[id];
+      const age = now - (m.ts || 0);
+      if (age > 60000) {
+        delete members[id];
+      } else if (age > 16000) {
+        m.status = 'offline';
+        m.timerRunning = false;
+      }
+    });
   }
+
+  function getSubjectIcon(subjName) {
+    if (!subjName) return '⚡';
+    try {
+      if (typeof SubjectLogger !== 'undefined' && SubjectLogger.getNormalizedList) {
+        const list = SubjectLogger.getNormalizedList();
+        const found = list.find(s => s.name.toLowerCase() === subjName.toLowerCase());
+        if (found) {
+          const cat = found.category || 'General';
+          const iconMap = { Academics: '📚', Science: '🧪', Coding: '💻', Language: '🗣️', Exam: '🎯', Creative: '🎨', General: '⚡' };
+          return iconMap[cat] || '📖';
+        }
+      }
+    } catch {}
+    return '📖';
+  }
+
   function render() {
     const list = $('#memberList');
-    if (!list || !me) return;
-    const all = Object.entries(members).sort((a, b) => b[1].focusSec - a[1].focusSec);
-    list.innerHTML = all.map(([id, m]) => `
-      <li class="member ${id === me.id ? 'me' : ''}">
-        <span class="member-avatar">${esc(m.avatar)}</span>
-        <span class="member-name">
-          <span class="status-dot ${m.status}"></span>${esc(m.nick)}
-          ${id === me.id ? '<span class="member-you">you</span>' : ''}
-        </span>
-        <span class="member-time">${m.status === 'studying' ? fmt(m.left) : m.status === 'break' ? '☕ ' + fmt(m.left) : 'idle'}</span>
-      </li>`).join('');
+    const countStudyingEl = $('#countStudying');
+    const countBreakEl = $('#countBreak');
+    const countOfflineEl = $('#countOffline');
+    const memberCountEl = $('#roomMemberCount');
+
+    if (!room || !me) return;
+
+    // Prune stale peers
+    prune();
+
+    const all = Object.values(members).sort((a, b) => {
+      const order = { studying: 0, break: 1, offline: 2, idle: 2 };
+      const diff = (order[a.status] || 2) - (order[b.status] || 2);
+      if (diff !== 0) return diff;
+      return (b.focusSec || 0) - (a.focusSec || 0);
+    });
+
+    // Compute status counts for Top Bar
+    let studyingCount = 0;
+    let breakCount = 0;
+    let offlineCount = 0;
+
+    all.forEach((m) => {
+      if (m.status === 'studying') studyingCount++;
+      else if (m.status === 'break') breakCount++;
+      else offlineCount++;
+    });
+
+    if (countStudyingEl) countStudyingEl.textContent = studyingCount;
+    if (countBreakEl) countBreakEl.textContent = breakCount;
+    if (countOfflineEl) countOfflineEl.textContent = offlineCount;
+    if (memberCountEl) memberCountEl.textContent = `${all.length} Member${all.length > 1 ? 's' : ''}`;
+
+    if (!list) return;
+
+    const now = Date.now();
+
+    list.innerHTML = all.map((m) => {
+      const isMe = m.id === me.id;
+      const status = m.status || 'offline';
+      const subjIcon = getSubjectIcon(m.subject);
+
+      let statusClass = 'status-offline';
+      let badgeLabel = 'Offline 💤';
+      let timeText = '00:00';
+
+      if (status === 'studying') {
+        statusClass = 'status-studying';
+        badgeLabel = 'Studying 🔥';
+        if (isMe) {
+          timeText = fmt(Timer.left);
+        } else {
+          const elapsed = (now - (m.ts || now)) / 1000;
+          if (m.timerMode === 'stopwatch') {
+            timeText = fmt((m.left || 0) + elapsed);
+          } else {
+            timeText = fmt(Math.max(0, (m.left || 0) - elapsed));
+          }
+        }
+      } else if (status === 'break') {
+        statusClass = 'status-break';
+        badgeLabel = 'On Break ☕';
+        if (isMe) {
+          timeText = fmt(Timer.left);
+        } else {
+          const elapsed = (now - (m.ts || now)) / 1000;
+          timeText = fmt(Math.max(0, (m.left || 0) - elapsed));
+        }
+      } else {
+        statusClass = 'status-offline';
+        badgeLabel = 'Offline 💤';
+        timeText = isMe ? fmt(Timer.left) : fmt(m.left || 0);
+      }
+
+      return `
+        <div class="ypt-member-card ${isMe ? 'is-me' : ''} ${statusClass}">
+          <div class="ypt-member-left">
+            <div class="ypt-member-avatar-wrap">
+              <span class="ypt-member-avatar">${esc(m.avatar || '🦉')}</span>
+              <span class="ypt-avatar-status-badge ${statusClass}"></span>
+            </div>
+            
+            <div class="ypt-member-details">
+              <div class="ypt-member-name-row">
+                <h3 class="ypt-member-name">${esc(m.nick || 'Anonymous')}</h3>
+                ${isMe ? '<span class="ypt-you-tag">YOU</span>' : ''}
+              </div>
+              
+              <div class="ypt-member-subject-badge" title="Studying: ${esc(m.subject || 'General Focus')}">
+                <span class="ypt-subj-icon">${subjIcon}</span>
+                <span class="ypt-subj-name">${esc(m.subject || 'General Focus')}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ypt-member-status-box">
+            <span class="ypt-badge-pill ${statusClass}">
+              ${badgeLabel}
+            </span>
+            <span class="ypt-member-timer">${timeText}</span>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   return {
@@ -656,6 +797,16 @@ const Rooms = (() => {
       } catch (err) {
         console.warn('BroadcastChannel not available:', err);
       }
+
+      // Cross-tab fallback via storage events
+      window.addEventListener('storage', (e) => {
+        if (e.key === LS && e.newValue) {
+          try {
+            const msg = JSON.parse(e.newValue);
+            this.receive(msg);
+          } catch {}
+        }
+      });
 
       const picker = $('#avatarPicker');
       const AVATARS = ['🦉', '🐺', '🦊', '🐼', '🐙', '🦄', '🐸', '🦋', '🐧', '🦁', '🐨', '🦈'];
@@ -677,82 +828,109 @@ const Rooms = (() => {
       if (btnCreate) btnCreate.addEventListener('click', () => this.join(code()));
       if (btnJoin) btnJoin.addEventListener('click', () => {
         const c = joinCode ? joinCode.value.trim().toUpperCase() : '';
-        if (c.length < 4) return toast('Enter a room code', 'bad');
+        if (c.length < 4) return toast('Enter a valid room code', 'bad');
         this.join(c);
       });
       if (joinCode) joinCode.addEventListener('keydown', (e) => { if (e.key === 'Enter' && btnJoin) btnJoin.click(); });
       if (btnCopy) btnCopy.addEventListener('click', () => {
-        navigator.clipboard?.writeText(room).then(() => toast('Room code copied 📋', 'good'));
+        if (room) {
+          navigator.clipboard?.writeText(room).then(() => toast('Room code copied 📋', 'good'));
+        }
       });
       if (btnLeave) btnLeave.addEventListener('click', () => this.leave());
 
-      const p = Store.d.profile;
+      const p = Store.d.profile || {};
       const nickInput = $('#nicknameInput');
       if (nickInput) nickInput.value = p.nick || '';
       if (picker) picker.querySelectorAll('.avatar-opt').forEach((b) => b.classList.toggle('sel', b.dataset.a === p.avatar));
+
+      // 1-second interval ticker while in room to keep countdown and topbar active
+      if (tickerInterval) clearInterval(tickerInterval);
+      tickerInterval = setInterval(() => {
+        if (room && me) {
+          render();
+        }
+      }, 1000);
     },
     join(c) {
       const nickInput = $('#nicknameInput');
       const nick = nickInput ? nickInput.value.trim() || 'Anonymous' : 'Anonymous';
       const avatar = $('#avatarPicker .sel')?.dataset.a || '🦉';
-      Store.d.profile = { nick, avatar }; Store.save();
+      Store.d.profile = { nick, avatar };
+      Store.save();
 
       room = c;
       me = {
         id: 'p_' + Math.random().toString(36).slice(2, 10),
-        nick, avatar,
-        status: 'idle', left: Timer.left, total: Timer.total,
-        focusSec: 0, ts: Date.now(),
+        nick,
+        avatar,
+        subject: (Store.d.subject || 'General Focus').trim() || 'General Focus',
+        status: getMyStatus(),
+        timerRunning: Timer.running,
+        timerMode: Timer.mode,
+        left: Timer.left,
+        total: Timer.total,
+        focusSec: 0,
+        ts: Date.now(),
       };
       members = { [me.id]: me };
       focusBuffer = 0;
+
       const lobby = $('#roomLobby'), view = $('#roomView'), codeEl = $('#roomCode');
       if (lobby) lobby.hidden = true;
       if (view) view.hidden = false;
       if (codeEl) codeEl.textContent = room;
-      this.heartbeat(); publish();
-      toast(`Joined room ${room} — share the code! 👥`, 'good');
+
+      publish();
+      this.heartbeat();
+      toast(`Joined room ${room}! Real-time study sync active 👥`, 'good');
     },
     leave() {
-      if (me) channel?.postMessage({ type: 'leave', room, peer: me });
-      room = null; me = null; members = {};
+      if (me && room) {
+        const leaveMsg = { type: 'leave', room, peer: me };
+        try { channel?.postMessage(leaveMsg); } catch {}
+        try { localStorage.setItem(LS, JSON.stringify(leaveMsg)); } catch {}
+      }
+      room = null;
+      me = null;
+      members = {};
       const lobby = $('#roomLobby'), view = $('#roomView');
       if (lobby) lobby.hidden = false;
       if (view) view.hidden = true;
-      toast('Left the room');
+      toast('Left the study room');
     },
     heartbeat() {
-      if (!room) return;
-      prune(); publish(); render();
-      setTimeout(() => this.heartbeat(), 4000);
+      if (!room || !me) return;
+      publish();
+      setTimeout(() => this.heartbeat(), 3500);
     },
     broadcastState() {
-      if (!me) return;
-      me.status = Timer.running ? (Timer.mode === 'focus' || Timer.mode === 'custom' ? 'studying' : 'break') : 'idle';
-      me.left = Timer.left; me.total = Timer.total; me.ts = Date.now();
+      if (!room || !me) return;
       publish();
     },
     noteFocus(dt) {
       if (!me) return;
       focusBuffer += dt;
-      if (focusBuffer >= 5) {
-        me.focusSec += focusBuffer; focusBuffer = 0;
-        me.ts = Date.now(); publish();
+      if (focusBuffer >= 4) {
+        me.focusSec = (me.focusSec || 0) + focusBuffer;
+        focusBuffer = 0;
+        publish();
       }
     },
     receive(msg) {
-      if (!msg) return;
-      if (msg.room !== room) return;
-      if (msg.type === 'state' && msg.room === room) {
+      if (!msg || msg.room !== room) return;
+      if (msg.type === 'state') {
         const p = msg.peer;
-        if (p.id !== me?.id) {
+        if (p && p.id && p.id !== me?.id) {
           p.ts = Date.now();
           members[p.id] = p;
-          prune(); render();
+          render();
         }
-      }
-      if (msg.type === 'leave' && msg.room === room) {
-        delete members[msg.peer.id]; render();
+      } else if (msg.type === 'leave') {
+        if (msg.peer && msg.peer.id) {
+          delete members[msg.peer.id];
+          render();
+        }
       }
     },
     leaderboardData(scope) {
@@ -762,7 +940,7 @@ const Rooms = (() => {
       Object.values(members).forEach((m) => {
         if (m.id === me?.id) return;
         const prev = rows.get(m.nick) || { nick: m.nick, avatar: m.avatar, sec: 0 };
-        prev.sec += m.focusSec;
+        prev.sec += (m.focusSec || 0);
         rows.set(m.nick, prev);
       });
       return [...rows.values()].sort((a, b) => b.sec - a.sec);
@@ -781,6 +959,7 @@ const Rooms = (() => {
             </li>`).join('')
         : '<li class="lb-empty">Join a room and study together to compete! 🏁</li>';
     },
+    render,
   };
 })();
 
@@ -1692,6 +1871,7 @@ const SubjectLogger = (() => {
       toast(`Active subject switched to ${name}! 📚`, 'good');
     }
     try { if (typeof LocalLeaderboard !== 'undefined' && LocalLeaderboard.render) LocalLeaderboard.render(); } catch {}
+    try { if (typeof Rooms !== 'undefined' && Rooms.inRoom) Rooms.broadcastState(); } catch {}
   }
 
   function addSubject(name, category, color, goalMinutes) {
