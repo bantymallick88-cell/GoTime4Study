@@ -978,12 +978,26 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  white-space: normal;
+}
+.panel-header-row h2 {
+  white-space: normal;
+  word-break: break-word;
+}
+.panel-header-row .text-btn {
+  white-space: normal;
+  flex-wrap: wrap;
+  word-break: break-word;
 }
 
 .hint-sm {
   font-size: 0.74rem;
   color: var(--text-mute);
   line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .section-divider {
@@ -1019,6 +1033,8 @@ kbd {
   color: var(--accent-cyan);
   cursor: pointer;
   transition: color 0.2s;
+  white-space: normal;
+  word-break: break-word;
 }
 .text-btn:hover { color: #fff; text-decoration: underline; }
 .text-btn.danger { color: var(--bad); }
@@ -1028,6 +1044,7 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  white-space: normal;
 }
 
 .mix-row {
@@ -1040,11 +1057,25 @@ kbd {
   background: var(--bg-input);
   border: 1px solid var(--stroke-soft);
   transition: border-color 0.2s;
+  white-space: normal;
 }
 .mix-row.on { border-color: var(--accent-purple); }
 
-.mix-name { font-size: 0.76rem; font-weight: 700; color: var(--text-dim); margin-bottom: 2px; }
-.mix-pct { font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-mute); text-align: right; }
+.mix-name {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+  white-space: normal;
+  word-break: break-word;
+}
+.mix-pct {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--text-mute);
+  text-align: right;
+  white-space: normal;
+}
 
 input[type="range"] {
   -webkit-appearance: none;
@@ -1664,8 +1695,20 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   font-size: 0.76rem;
   color: var(--text-dim);
+  white-space: normal;
+}
+.strict-stats-row span,
+.strict-stats-row b {
+  white-space: normal;
+  word-break: break-word;
+}
+.strict-stats-row .text-btn {
+  white-space: normal;
+  flex-wrap: wrap;
 }
 
 /* ── Panel 5 : Awards & Badges ── */
@@ -1728,11 +1771,15 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   margin-bottom: 20px;
   gap: 10px;
+  white-space: normal;
 }
 .modal-head h2 {
   font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+  white-space: normal;
+  word-break: break-word;
 }
 .close-btn {
   background: var(--bg-input);
@@ -1751,6 +1798,7 @@ input[type="range"]::-webkit-slider-thumb {
   gap: 10px;
   margin-bottom: 16px;
   width: 100%;
+  white-space: normal;
 }
 .scene-card {
   aspect-ratio: 16 / 11;
@@ -1766,10 +1814,20 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   transition: all 0.25s;
   min-width: 0;
+  white-space: normal;
+  flex-wrap: wrap;
+  text-align: center;
 }
 .scene-card:hover { transform: translateY(-2px); border-color: var(--accent-cyan); }
 .scene-card.sel { border-color: var(--accent-purple); box-shadow: 0 0 16px var(--accent-purple-glow); }
-.scene-card small { font-size: 0.66rem; font-weight: 600; color: var(--text-dim); }
+.scene-card small {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
+}
 
 .field-grid {
   display: grid;
@@ -1785,6 +1843,8 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-dim);
+  white-space: normal;
+  word-break: break-word;
 }
 .field-grid input {
   padding: 8px 10px;
@@ -1801,10 +1861,16 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   padding: 10px 0;
   border-bottom: 1px solid var(--stroke-soft);
   font-size: 0.82rem;
   gap: 12px;
+  white-space: normal;
+}
+.field-row label {
+  white-space: normal;
+  word-break: break-word;
 }
 .field-row:last-of-type { border-bottom: none; }
 
@@ -1837,11 +1903,19 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-neon);
   box-sizing: border-box;
+  white-space: normal;
 }
 .strict-icon { font-size: 3.2rem; animation: lockPulse 2s infinite; }
 @keyframes lockPulse { 50% { transform: scale(1.1); filter: drop-shadow(0 0 20px var(--accent-purple)); } }
 
-.strict-title { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.04em; color: var(--text); }
+.strict-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  white-space: normal;
+  word-break: break-word;
+}
 .strict-time {
   font-size: clamp(2.6rem, 10vw, 3.8rem);
   font-weight: 800;
@@ -1850,7 +1924,20 @@ input[type="range"]::-webkit-slider-thumb {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.strict-sub { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; }
+.strict-sub {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
+}
+.strict-msg .ctrl-btn,
+#btnStrictExit {
+  white-space: normal;
+  flex-wrap: wrap;
+  word-break: break-word;
+  text-align: center;
+}
 
 /* ── 10. Toasts & Footer ─────────────────────────────────────── */
 .toasts {
