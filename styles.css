@@ -178,7 +178,7 @@ img, svg, canvas, audio, video, iframe {
   background: var(--bg-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--stroke);
+  border: 1px solid var(--stroke-soft);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-card);
   position: relative;
@@ -200,10 +200,10 @@ img, svg, canvas, audio, video, iframe {
   width: 100%;
   max-width: 1380px;
   margin: 0 auto;
-  padding: 16px 24px 36px;
+  padding: 22px 28px 48px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 28px;
   min-height: 100vh;
   box-sizing: border-box;
 }
@@ -213,14 +213,17 @@ img, svg, canvas, audio, video, iframe {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 14px 26px;
   border-radius: var(--r-full);
   border: 1px solid var(--stroke-soft);
-  background: rgba(12, 16, 28, 0.75);
+  background: rgba(12, 16, 28, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  gap: 12px;
+  gap: 16px;
+  margin-bottom: 4px;
 }
 
 .brand {
@@ -691,16 +694,17 @@ img, svg, canvas, audio, video, iframe {
 .hero-header {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 4px 0;
+  gap: 20px;
+  padding: 6px 0 10px;
   width: 100%;
   max-width: 100%;
+  margin-bottom: 6px;
 }
 
 .hero-headline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   max-width: 100%;
 }
@@ -709,7 +713,7 @@ img, svg, canvas, audio, video, iframe {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: var(--r-full);
   background: linear-gradient(90deg, rgba(139, 92, 246, 0.16), rgba(6, 182, 212, 0.16));
   border: 1px solid rgba(139, 92, 246, 0.35);
@@ -738,7 +742,7 @@ img, svg, canvas, audio, video, iframe {
 .hero-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
-  gap: 14px;
+  gap: 18px;
   width: 100%;
   max-width: 100%;
 }
@@ -746,27 +750,29 @@ img, svg, canvas, audio, video, iframe {
 .hero-stat-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
+  gap: 16px;
+  padding: 16px 20px;
   border-radius: var(--r-lg);
-  background: var(--glass);
+  background: rgba(10, 14, 22, 0.75);
   border: 1px solid var(--stroke-soft);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: all 0.3s var(--ease);
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .hero-stat-card:hover {
   border-color: var(--stroke-strong);
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 .hstat-icon {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
   display: grid;
   place-items: center;
@@ -786,7 +792,7 @@ img, svg, canvas, audio, video, iframe {
 #layout {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
-  gap: 20px;
+  gap: 26px;
   align-items: start;
   width: 100%;
   max-width: 100%;
@@ -796,7 +802,7 @@ img, svg, canvas, audio, video, iframe {
 .center-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
   min-width: 0;
   width: 100%;
   max-width: 100%;
@@ -806,20 +812,22 @@ img, svg, canvas, audio, video, iframe {
 .side-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
   min-width: 0;
   width: 100%;
   max-width: 100%;
 }
 
 .subject-card {
-  padding: 18px 20px;
+  padding: 24px 26px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   border-radius: var(--r-xl);
-  border: 1px solid var(--stroke);
+  border: 1px solid var(--stroke-soft);
   background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--shadow-card);
   transition: border-color 0.25s var(--ease);
 }
@@ -1047,27 +1055,32 @@ img, svg, canvas, audio, video, iframe {
 
 .ypt-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+  gap: 14px;
 }
 
 .ypt-card {
   position: relative;
   display: flex;
   border-radius: var(--r-md);
-  background: rgba(14, 18, 28, 0.85);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 18, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   overflow: hidden;
   cursor: pointer;
   user-select: none;
-  transition: all 0.22s var(--ease);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ypt-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.4);
-  background: rgba(18, 24, 38, 0.92);
+  transform: translateY(-3px);
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(18, 24, 38, 0.94);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
 }
 
@@ -1226,27 +1239,41 @@ img, svg, canvas, audio, video, iframe {
   text-align: right;
 }
 
-/* ── Emerald Border Highlight on Active Selection ── */
+/* ── Strong Glowing Emerald Border & Scale Transition on Active Selection ── */
 .ypt-card.active-ypt-card {
-  border: 1.8px solid var(--accent-emerald) !important;
-  background: rgba(16, 185, 129, 0.09) !important;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25), 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+  border: 2px solid var(--accent-emerald) !important;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.16) 0%, rgba(10, 18, 26, 0.95) 100%) !important;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.65), 0 0 24px rgba(16, 185, 129, 0.45), 0 12px 28px rgba(0, 0, 0, 0.55) !important;
+  transform: scale(1.035) translateY(-2px) !important;
+  z-index: 3;
+}
+
+.ypt-card.active-ypt-card:hover {
+  transform: scale(1.05) translateY(-4px) !important;
+  box-shadow: 0 0 0 1.5px var(--accent-emerald), 0 0 32px rgba(16, 185, 129, 0.65), 0 16px 32px rgba(0, 0, 0, 0.6) !important;
 }
 
 .ypt-card.active-ypt-card .ypt-card-title {
   color: #fff;
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+.ypt-card.active-ypt-card .ypt-card-left-bar {
+  box-shadow: 0 0 16px var(--accent-emerald), 0 0 8px var(--accent-emerald);
 }
 
 /* Timer Card Structure */
 .timer-card {
-  padding: 28px 24px;
+  padding: 32px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  border: 1px solid var(--stroke);
-  box-shadow: var(--shadow-neon);
+  gap: 28px;
+  border: 1px solid var(--stroke-soft);
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-card);
   width: 100%;
   max-width: 100%;
   overflow: hidden;
@@ -1506,15 +1533,18 @@ kbd {
 }
 
 /* ── 8. SaaS Console Sidebar Panels ─────────────────────────── */
-.side-col {
-  padding: 20px;
+.console-card {
+  padding: 24px 26px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--stroke-soft);
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-card);
   min-height: 580px;
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -1530,7 +1560,6 @@ kbd {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-}
 }
 
 .side-tab {
@@ -1893,17 +1922,19 @@ input[type="range"]::-webkit-slider-thumb {
 .ypt-member-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .ypt-member-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-radius: var(--r-lg);
-  background: rgba(14, 18, 28, 0.85);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 18, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   gap: 12px;
   transition: all 0.22s var(--ease);
@@ -3719,14 +3750,16 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .widget-card {
-  padding: 22px;
+  padding: 24px 26px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   border-radius: var(--r-xl);
-  background: rgba(10, 14, 22, 0.78);
-  border: 1px solid rgba(16, 185, 129, 0.22);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--stroke-soft);
+  box-shadow: var(--shadow-card);
 }
 
 .widget-card-head {
