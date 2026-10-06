@@ -1855,16 +1855,43 @@ const ExamCountdown = (() => {
   let config = load();
   let timerId = null;
 
+  function toLocalDatetimeString(date) {
+    const pad = n => String(n).padStart(2, '0');
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    return `${y}-${m}-${d}T${hh}:${mm}`;
+  }
+
+  function parseTargetTime(targetStr) {
+    if (!targetStr) return NaN;
+    if (typeof targetStr === 'number') return targetStr;
+    const s = String(targetStr).trim();
+    const parts = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (parts) {
+      const [, y, m, d, h = '00', min = '00', sec = '00'] = parts;
+      const dt = new Date(+y, +m - 1, +d, +h, +min, +sec);
+      return dt.getTime();
+    }
+    const parsed = new Date(s).getTime();
+    return parsed;
+  }
+
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && typeof data === 'object') return data;
+      }
     } catch {}
-    // Default: 30 days ahead from now
+    // Default: 30 days ahead from now at 09:00 local time
     const defDate = new Date();
     defDate.setDate(defDate.getDate() + 30);
     defDate.setHours(9, 0, 0, 0);
-    return { name: 'Semester Finals', target: defDate.toISOString().slice(0, 16) };
+    return { name: 'Semester Finals', target: toLocalDatetimeString(defDate) };
   }
 
   function save() {
@@ -1883,34 +1910,53 @@ const ExamCountdown = (() => {
       return;
     }
 
-    const targetTime = new Date(config.target).getTime();
-    const now = Date.now();
-    const diff = targetTime - now;
+    const targetTime = parseTargetTime(config.target);
+    if (isNaN(targetTime)) {
+      if (labelEl) labelEl.textContent = `🎯 Target: ${esc(config.name || 'Target Exam')}`;
+      if (dateTextEl) dateTextEl.textContent = 'Invalid target date format';
+      daysEl.textContent = '00'; hrsEl.textContent = '00'; minsEl.textContent = '00'; secsEl.textContent = '00';
+      return;
+    }
 
     if (labelEl) labelEl.textContent = `🎯 Target: ${esc(config.name || 'Target Exam')}`;
 
-    if (dateTextEl) {
-      const d = new Date(config.target);
-      dateTextEl.textContent = isNaN(d.getTime())
-        ? 'Invalid target date'
-        : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-    }
+    const targetDate = new Date(targetTime);
+    const now = Date.now();
+    const diff = targetTime - now;
 
-    if (isNaN(diff) || diff <= 0) {
+    if (diff <= 0) {
       daysEl.textContent = '00'; hrsEl.textContent = '00'; minsEl.textContent = '00'; secsEl.textContent = '00';
       if (dateTextEl) dateTextEl.textContent = '🎉 Exam Milestone Reached! Best of luck!';
       return;
     }
 
-    const sec = Math.floor((diff / 1000) % 60);
-    const min = Math.floor((diff / (1000 * 60)) % 60);
-    const hr = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (dateTextEl) {
+      dateTextEl.textContent = targetDate.toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }) + ' · ' + targetDate.toLocaleTimeString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    const totalSecs = Math.floor(diff / 1000);
+    const sec = totalSecs % 60;
+    const min = Math.floor(totalSecs / 60) % 60;
+    const hr = Math.floor(totalSecs / 3600) % 24;
+    const days = Math.floor(totalSecs / 86400);
 
     daysEl.textContent = String(days).padStart(2, '0');
     hrsEl.textContent = String(hr).padStart(2, '0');
     minsEl.textContent = String(min).padStart(2, '0');
     secsEl.textContent = String(sec).padStart(2, '0');
+  }
+
+  function startTicker() {
+    if (timerId) clearInterval(timerId);
+    timerId = setInterval(updateDisplay, 1000);
   }
 
   return {
@@ -1921,20 +1967,38 @@ const ExamCountdown = (() => {
       const btnClear = $('#btnClearExam');
 
       if (nameInput) nameInput.value = config.name || '';
-      if (dateInput) dateInput.value = config.target || '';
+      if (dateInput && config.target) {
+        const t = parseTargetTime(config.target);
+        if (!isNaN(t)) {
+          dateInput.value = toLocalDatetimeString(new Date(t));
+        } else {
+          dateInput.value = config.target;
+        }
+      }
 
       if (btnSet) {
         btnSet.addEventListener('click', () => {
           const name = (nameInput ? nameInput.value.trim() : '') || 'Semester Finals';
-          const target = dateInput ? dateInput.value : '';
+          const target = dateInput ? dateInput.value.trim() : '';
           if (!target) {
             toast('Please choose a valid target date & time', 'bad');
             return;
           }
+          const targetTime = parseTargetTime(target);
+          if (isNaN(targetTime)) {
+            toast('Invalid date format selected', 'bad');
+            return;
+          }
+          if (targetTime <= Date.now()) {
+            toast('Note: The selected date is in the past', 'warn');
+          } else {
+            toast(`Exam countdown locked for ${name}! 🎯`, 'good');
+          }
+
           config = { name, target };
           save();
           updateDisplay();
-          toast(`Exam countdown locked for ${name}! 🎯`, 'good');
+          startTicker();
         });
       }
 
@@ -1950,8 +2014,7 @@ const ExamCountdown = (() => {
       }
 
       updateDisplay();
-      if (timerId) clearInterval(timerId);
-      timerId = setInterval(updateDisplay, 1000);
+      startTicker();
     },
     updateDisplay,
   };
