@@ -221,11 +221,14 @@
       <!-- ══ Left Column : Timer & Subjects ══ -->
       <section class="center-col">
 
-        <!-- Subject Logger & Dynamic Subject Chips -->
-        <div class="glass subject-card">
+        <!-- YPT-Style Subject Tracker & Manager -->
+        <div class="glass subject-card ypt-card-container">
           <div class="subject-bar">
-            <div class="subject-icon-box">📖</div>
-            <input id="subjectInput" class="subject-input" type="text" maxlength="40" placeholder="Active Subject (e.g. Mathematics, Quantum Physics)" />
+            <div class="subject-icon-box" id="activeSubjIcon">📖</div>
+            <div class="active-subj-info-wrap">
+              <input id="subjectInput" class="subject-input" type="text" maxlength="40" placeholder="Active Subject (e.g. Mathematics, Quantum Physics)" />
+              <span class="active-subj-sub" id="activeSubjMeta">Select or tap a card below to focus</span>
+            </div>
             <button id="btnToggleAddSubject" class="glow-btn sm" title="Add New Subject">
               <span>＋ Add Subject</span>
             </button>
@@ -234,18 +237,75 @@
             </button>
           </div>
 
-          <!-- Add Subject Inline Input Form -->
-          <div id="addSubjectForm" class="add-subject-form" hidden>
-            <input id="newSubjectInput" class="txt-input sm" type="text" maxlength="30" placeholder="Enter subject name (e.g. Machine Learning, Biology)" />
-            <button id="btnConfirmAddSubject" class="ctrl-btn primary small">Save Subject</button>
-            <button id="btnCancelAddSubject" class="text-btn danger sm" title="Cancel">✕</button>
+          <!-- Add Subject Expanded Form with Color Picker & Categories -->
+          <div id="addSubjectForm" class="add-subject-form-expanded" hidden>
+            <div class="add-subj-header">
+              <div class="add-subj-badge">✨ NEW SUBJECT</div>
+              <span class="hint-sm">Customize category & color theme</span>
+            </div>
+
+            <div class="add-subj-grid">
+              <div class="form-group">
+                <label class="field-label-sm" for="newSubjectInput">Subject Name</label>
+                <input id="newSubjectInput" class="txt-input sm" type="text" maxlength="32" placeholder="e.g. Organic Chemistry, USMLE, Algorithms" />
+              </div>
+              
+              <div class="form-group">
+                <label class="field-label-sm" for="newSubjectCategory">Category</label>
+                <select id="newSubjectCategory" class="txt-input sm meta-select">
+                  <option value="Academics">📚 Major / Academics</option>
+                  <option value="Science">🧪 Science & Math</option>
+                  <option value="Coding">💻 Programming / Tech</option>
+                  <option value="Language">🗣️ Languages</option>
+                  <option value="Exam">🎯 Exam & Certifications</option>
+                  <option value="Creative">🎨 Arts & Creative</option>
+                  <option value="General">⚡ General Focus</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Color Palette Swatches -->
+            <div class="form-group">
+              <label class="field-label-sm">Color Badge & Theme</label>
+              <div class="color-picker-row" id="colorPickerRow">
+                <button type="button" class="color-dot-btn active" data-color="#10b981" style="--c:#10b981;" title="Emerald"></button>
+                <button type="button" class="color-dot-btn" data-color="#06b6d4" style="--c:#06b6d4;" title="Cyan"></button>
+                <button type="button" class="color-dot-btn" data-color="#8b5cf6" style="--c:#8b5cf6;" title="Purple"></button>
+                <button type="button" class="color-dot-btn" data-color="#f59e0b" style="--c:#f59e0b;" title="Amber"></button>
+                <button type="button" class="color-dot-btn" data-color="#f43f5e" style="--c:#f43f5e;" title="Rose"></button>
+                <button type="button" class="color-dot-btn" data-color="#0ea5e9" style="--c:#0ea5e9;" title="Sky"></button>
+                <button type="button" class="color-dot-btn" data-color="#84cc16" style="--c:#84cc16;" title="Lime"></button>
+                <button type="button" class="color-dot-btn" data-color="#ec4899" style="--c:#ec4899;" title="Pink"></button>
+                <label class="custom-color-btn" title="Custom color picker">
+                  <input type="color" id="customColorInput" value="#10b981" />
+                  <span class="custom-color-icon">🎨</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Daily Target & Actions -->
+            <div class="add-subj-bottom-row">
+              <div class="goal-input-wrap">
+                <label class="field-label-sm" for="newSubjectGoal">Daily Target (mins)</label>
+                <input id="newSubjectGoal" class="txt-input sm" type="number" min="5" max="720" value="60" />
+              </div>
+              <div class="add-subj-actions">
+                <button id="btnConfirmAddSubject" class="ctrl-btn primary small">
+                  <span>Save Subject</span>
+                </button>
+                <button id="btnCancelAddSubject" class="text-btn danger sm" title="Cancel">✕ Cancel</button>
+              </div>
+            </div>
           </div>
 
-          <!-- Clickable Dynamic Subject Chips -->
-          <div class="subject-chips-wrap">
-            <span class="chips-label">QUICK CHIPS:</span>
-            <div id="subjectChipsList" class="subject-chips-list">
-              <!-- Dynamically injected subject chips -->
+          <!-- YPT-Style Vertical / Grid Subject Cards -->
+          <div class="ypt-subjects-wrap">
+            <div class="ypt-section-head">
+              <span class="chips-label">YPT STUDY SUBJECTS · TAP TO ACTIVATE</span>
+              <span class="hint-sm" id="activeSubjectBadge">Active: <b>None</b></span>
+            </div>
+            <div id="subjectCardsList" class="ypt-cards-grid">
+              <!-- Dynamically injected YPT-style subject cards with color badges, progress, & total study time -->
             </div>
           </div>
         </div>

@@ -52,6 +52,7 @@ const Store = (() => {
         data.subjectLogs[k].push(logEntry);
       }
       save();
+      try { if (typeof SubjectLogger !== 'undefined' && SubjectLogger.render) SubjectLogger.render(); } catch {}
     },
     addSessionCount() {
       const k = this.todayKey();
@@ -1506,68 +1507,237 @@ const StrictFocus = (() => {
 })();
 
 /* ════════════════════════════════════════════════════════════
-   13. SUBJECT LOGGER — track what you're studying & dynamic chips
+   13. SUBJECT TRACKER (YPT-Style) — color badges, study goals,
+       total study time, progress bars & persistent LocalStorage
    ════════════════════════════════════════════════════════════ */
 const SubjectLogger = (() => {
-  function renderChips() {
-    const listEl = $('#subjectChipsList');
-    if (!listEl) return;
-    const subjects = Store.d.subjectsList || [];
+  const CATEGORIES = {
+    'Academics': { name: 'Academics', icon: '📚' },
+    'Science':   { name: 'Science & Math', icon: '🧪' },
+    'Coding':    { name: 'Programming', icon: '💻' },
+    'Language':  { name: 'Languages', icon: '🗣️' },
+    'Exam':      { name: 'Exam Prep', icon: '🎯' },
+    'Creative':  { name: 'Arts & Creative', icon: '🎨' },
+    'General':   { name: 'General Focus', icon: '⚡' },
+  };
+
+  const DEFAULT_COLORS = ['#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#f43f5e', '#0ea5e9', '#84cc16', '#ec4899'];
+  let selectedColor = '#10b981';
+
+  function getCategoryInfo(catKey) {
+    return CATEGORIES[catKey] || { name: catKey || 'General', icon: '⚡' };
+  }
+
+  function getNormalizedList() {
+    if (!Array.isArray(Store.d.subjectsList) || !Store.d.subjectsList.length) {
+      Store.d.subjectsList = [
+        { id: 'Mathematics', name: 'Mathematics', color: '#06b6d4', category: 'Science', goalMinutes: 60 },
+        { id: 'Physics', name: 'Physics', color: '#8b5cf6', category: 'Science', goalMinutes: 60 },
+        { id: 'Computer Science', name: 'Computer Science', color: '#10b981', category: 'Coding', goalMinutes: 90 },
+        { id: 'Biology', name: 'Biology', color: '#84cc16', category: 'Science', goalMinutes: 45 },
+        { id: 'Literature', name: 'Literature', color: '#f59e0b', category: 'Academics', goalMinutes: 45 }
+      ];
+      Store.save();
+      return Store.d.subjectsList;
+    }
+
+    let changed = false;
+    const normalized = Store.d.subjectsList.map((item, idx) => {
+      if (typeof item === 'string') {
+        changed = true;
+        return {
+          id: item,
+          name: item,
+          color: DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
+          category: 'General',
+          goalMinutes: 60
+        };
+      }
+      return {
+        id: item.id || item.name,
+        name: item.name || 'Untitled Subject',
+        color: item.color || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
+        category: item.category || 'General',
+        goalMinutes: Number(item.goalMinutes) || 60
+      };
+    });
+
+    if (changed) {
+      Store.d.subjectsList = normalized;
+      Store.save();
+    }
+    return normalized;
+  }
+
+  function getStatsForSubject(subjName) {
+    if (!subjName) return { totalMins: 0, todayMins: 0 };
+    const logs = Store.d.subjectLogs || {};
+    const todayK = Store.todayKey();
+    let totalMins = 0;
+    let todayMins = 0;
+
+    const lowerTarget = subjName.trim().toLowerCase();
+
+    Object.entries(logs).forEach(([day, entries]) => {
+      if (!Array.isArray(entries)) return;
+      entries.forEach((entry) => {
+        if (entry && entry.subject && entry.subject.trim().toLowerCase() === lowerTarget) {
+          const mins = Number(entry.minutes) || 0;
+          totalMins += mins;
+          if (day === todayK) {
+            todayMins += mins;
+          }
+        }
+      });
+    });
+
+    return { totalMins, todayMins };
+  }
+
+  function renderCards() {
+    const listEl = $('#subjectCardsList');
+    const input = $('#subjectInput');
+    const activeBadge = $('#activeSubjectBadge');
+    const activeIcon = $('#activeSubjIcon');
+    const activeMeta = $('#activeSubjMeta');
+
+    const subjects = getNormalizedList();
     const activeSubj = (Store.d.subject || '').trim();
+    let activeObj = null;
+
+    if (activeSubj) {
+      activeObj = subjects.find(s => s.name.toLowerCase() === activeSubj.toLowerCase()) || null;
+    }
+
+    // Update active subject display header
+    if (input && document.activeElement !== input) {
+      input.value = activeSubj;
+    }
+
+    if (activeObj) {
+      const catInfo = getCategoryInfo(activeObj.category);
+      if (activeIcon) activeIcon.textContent = catInfo.icon;
+      if (activeBadge) activeBadge.innerHTML = `Active: <b style="color:${activeObj.color}">${esc(activeObj.name)}</b>`;
+      const stats = getStatsForSubject(activeObj.name);
+      if (activeMeta) {
+        activeMeta.innerHTML = `Active: <b style="color:${activeObj.color}">${esc(activeObj.name)}</b> (${catInfo.name}) · Today: ${fmtMin(stats.todayMins)}`;
+      }
+    } else if (activeSubj) {
+      if (activeIcon) activeIcon.textContent = '📖';
+      if (activeBadge) activeBadge.innerHTML = `Active: <b style="color:var(--accent-emerald)">${esc(activeSubj)}</b>`;
+      const stats = getStatsForSubject(activeSubj);
+      if (activeMeta) {
+        activeMeta.innerHTML = `Active: <b>${esc(activeSubj)}</b> · Today: ${fmtMin(stats.todayMins)}`;
+      }
+    } else {
+      if (activeIcon) activeIcon.textContent = '📖';
+      if (activeBadge) activeBadge.innerHTML = 'Active: <b>None</b>';
+      if (activeMeta) activeMeta.textContent = 'Select or tap a card below to focus';
+    }
+
+    if (!listEl) return;
 
     if (!subjects.length) {
-      listEl.innerHTML = '<span class="hint-sm" style="opacity:0.7">No saved subjects. Click "＋ Add Subject" above!</span>';
+      listEl.innerHTML = '<div class="hint-sm" style="padding:16px 0;text-align:center;grid-column:1/-1;">No subjects created yet. Click "＋ Add Subject" above to start! 🚀</div>';
       return;
     }
 
-    listEl.innerHTML = subjects.map((subj) => {
-      const isActive = subj.toLowerCase() === activeSubj.toLowerCase();
+    listEl.innerHTML = subjects.map((item) => {
+      const isActive = item.name.toLowerCase() === activeSubj.toLowerCase();
+      const catInfo = getCategoryInfo(item.category);
+      const { totalMins, todayMins } = getStatsForSubject(item.name);
+      const goal = item.goalMinutes || 60;
+      const progressPct = Math.min(100, Math.round((todayMins / goal) * 100));
+
       return `
-        <button type="button" class="subject-chip ${isActive ? 'active' : ''}" data-subj="${esc(subj)}">
-          <span>${esc(subj)}</span>
-          <span class="subject-chip-del" data-del-subj="${esc(subj)}" title="Remove subject">✕</span>
-        </button>`;
+        <div class="ypt-card ${isActive ? 'active-ypt-card' : ''}" data-subj="${esc(item.name)}" style="--subj-theme:${item.color || '#10b981'};" role="button" tabindex="0" title="Tap to select ${esc(item.name)} as active subject">
+          <div class="ypt-card-left-bar"></div>
+          <div class="ypt-card-body">
+            <div class="ypt-card-top">
+              <div class="ypt-card-badge-wrap">
+                <span class="ypt-color-dot" style="background:${item.color || '#10b981'};"></span>
+                <span class="ypt-category-tag">${catInfo.icon} ${esc(catInfo.name)}</span>
+              </div>
+              <div class="ypt-card-actions">
+                ${isActive ? '<span class="ypt-active-pill">● ACTIVE</span>' : ''}
+                <button type="button" class="ypt-del-btn" data-del-subj="${esc(item.name)}" title="Delete ${esc(item.name)}">✕</button>
+              </div>
+            </div>
+
+            <div class="ypt-card-main">
+              <h3 class="ypt-card-title">${esc(item.name)}</h3>
+              <div class="ypt-card-time-row">
+                <span class="ypt-total-time"><strong>${fmtMin(totalMins)}</strong> total</span>
+                <span class="ypt-today-time">Today: <b>${fmtMin(todayMins)}</b></span>
+              </div>
+            </div>
+
+            <div class="ypt-progress-wrap">
+              <div class="ypt-progress-bar">
+                <div class="ypt-progress-fill" style="width:${progressPct}%; background:${item.color || 'var(--accent-emerald)'};"></div>
+              </div>
+              <span class="ypt-progress-pct">${progressPct}%</span>
+            </div>
+          </div>
+        </div>`;
     }).join('');
   }
 
-  function selectSubject(subj) {
-    Store.d.subject = subj;
+  function selectSubject(subjName) {
+    const name = (subjName || '').trim();
+    Store.d.subject = name;
     Store.save();
-    const input = $('#subjectInput');
-    if (input) input.value = subj;
-    renderChips();
-    toast(`Active subject: ${subj} 📚`, 'good');
+    renderCards();
+    if (name) {
+      toast(`Active subject switched to ${name}! 📚`, 'good');
+    }
+    try { if (typeof LocalLeaderboard !== 'undefined' && LocalLeaderboard.render) LocalLeaderboard.render(); } catch {}
   }
 
-  function addSubject(name) {
+  function addSubject(name, category, color, goalMinutes) {
     name = (name || '').trim();
     if (!name) {
       toast('Please enter a subject name', 'bad');
       return;
     }
-    Store.d.subjectsList = Store.d.subjectsList || [];
-    const exists = Store.d.subjectsList.some((s) => s.toLowerCase() === name.toLowerCase());
-    if (!exists) {
-      Store.d.subjectsList.push(name);
+    const subjects = getNormalizedList();
+    const existingIdx = subjects.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+
+    const newObj = {
+      id: name,
+      name,
+      category: category || 'General',
+      color: color || selectedColor || '#10b981',
+      goalMinutes: Number(goalMinutes) || 60,
+    };
+
+    if (existingIdx >= 0) {
+      subjects[existingIdx] = newObj;
+    } else {
+      subjects.push(newObj);
     }
+
+    Store.d.subjectsList = subjects;
     selectSubject(name);
+
     const form = $('#addSubjectForm');
     const input = $('#newSubjectInput');
     if (form) form.hidden = true;
     if (input) input.value = '';
-    toast(`Subject added: ${name} ✨`, 'good');
+    toast(`Subject saved: ${name} ✨`, 'good');
   }
 
   function deleteSubject(name) {
-    Store.d.subjectsList = (Store.d.subjectsList || []).filter((s) => s.toLowerCase() !== name.toLowerCase());
-    if ((Store.d.subject || '').toLowerCase() === name.toLowerCase()) {
+    const target = (name || '').trim();
+    if (!target) return;
+    Store.d.subjectsList = getNormalizedList().filter(s => s.name.toLowerCase() !== target.toLowerCase());
+    if ((Store.d.subject || '').toLowerCase() === target.toLowerCase()) {
       Store.d.subject = '';
-      const input = $('#subjectInput');
-      if (input) input.value = '';
     }
     Store.save();
-    renderChips();
-    toast(`Removed subject: ${name}`);
+    renderCards();
+    toast(`Subject removed: ${target}`);
+    try { if (typeof LocalLeaderboard !== 'undefined' && LocalLeaderboard.render) LocalLeaderboard.render(); } catch {}
   }
 
   function renderLog() {
@@ -1597,11 +1767,7 @@ const SubjectLogger = (() => {
 
   return {
     init() {
-      // Ensure subjectsList exists in Store
-      if (!Array.isArray(Store.d.subjectsList)) {
-        Store.d.subjectsList = ['Mathematics', 'Physics', 'Computer Science', 'Biology', 'Literature'];
-        Store.save();
-      }
+      getNormalizedList();
 
       const input = $('#subjectInput');
       if (input) {
@@ -1609,16 +1775,20 @@ const SubjectLogger = (() => {
         input.addEventListener('input', () => {
           Store.d.subject = input.value.trim();
           Store.save();
-          renderChips();
+          renderCards();
         });
       }
 
-      // Add Subject Toggle Button & Form
+      // Add Subject Toggle
       const btnToggle = $('#btnToggleAddSubject');
       const addForm = $('#addSubjectForm');
       const newSubjInput = $('#newSubjectInput');
+      const newSubjCat = $('#newSubjectCategory');
+      const newSubjGoal = $('#newSubjectGoal');
       const btnConfirm = $('#btnConfirmAddSubject');
       const btnCancel = $('#btnCancelAddSubject');
+      const colorPickerRow = $('#colorPickerRow');
+      const customColorInput = $('#customColorInput');
 
       if (btnToggle && addForm) {
         btnToggle.addEventListener('click', () => {
@@ -1629,17 +1799,43 @@ const SubjectLogger = (() => {
         });
       }
 
-      if (btnConfirm && newSubjInput) {
-        btnConfirm.addEventListener('click', () => {
-          addSubject(newSubjInput.value);
+      // Color Palette Selector
+      if (colorPickerRow) {
+        colorPickerRow.addEventListener('click', (e) => {
+          const dot = e.target.closest('.color-dot-btn');
+          if (dot && dot.dataset.color) {
+            selectedColor = dot.dataset.color;
+            $$('.color-dot-btn').forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+            if (customColorInput) customColorInput.value = selectedColor;
+          }
         });
+      }
+
+      if (customColorInput) {
+        customColorInput.addEventListener('input', (e) => {
+          selectedColor = e.target.value;
+          $$('.color-dot-btn').forEach(d => d.classList.remove('active'));
+        });
+      }
+
+      function handleSaveNewSubject() {
+        if (!newSubjInput) return;
+        const name = newSubjInput.value;
+        const category = newSubjCat ? newSubjCat.value : 'Academics';
+        const goal = newSubjGoal ? newSubjGoal.value : 60;
+        addSubject(name, category, selectedColor, goal);
+      }
+
+      if (btnConfirm) {
+        btnConfirm.addEventListener('click', handleSaveNewSubject);
       }
 
       if (newSubjInput) {
         newSubjInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            addSubject(newSubjInput.value);
+            handleSaveNewSubject();
           } else if (e.key === 'Escape' && addForm) {
             addForm.hidden = true;
           }
@@ -1653,11 +1849,11 @@ const SubjectLogger = (() => {
         });
       }
 
-      // Subject Chips List Delegated Click
-      const chipsList = $('#subjectChipsList');
-      if (chipsList) {
-        chipsList.addEventListener('click', (e) => {
-          const delBtn = e.target.closest('.subject-chip-del');
+      // Single-Tap Subject Card Selection & Deletion (Delegated)
+      const cardsList = $('#subjectCardsList');
+      if (cardsList) {
+        cardsList.addEventListener('click', (e) => {
+          const delBtn = e.target.closest('.ypt-del-btn');
           if (delBtn) {
             e.stopPropagation();
             const subjName = delBtn.dataset.delSubj;
@@ -1665,10 +1861,21 @@ const SubjectLogger = (() => {
             return;
           }
 
-          const chip = e.target.closest('.subject-chip');
-          if (chip) {
-            const subjName = chip.dataset.subj;
+          const card = e.target.closest('.ypt-card');
+          if (card) {
+            const subjName = card.dataset.subj;
             if (subjName) selectSubject(subjName);
+          }
+        });
+
+        // Keyboard accessibility
+        cardsList.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            const card = e.target.closest('.ypt-card');
+            if (card && card.dataset.subj) {
+              e.preventDefault();
+              selectSubject(card.dataset.subj);
+            }
           }
         });
       }
@@ -1683,12 +1890,14 @@ const SubjectLogger = (() => {
         });
       }
 
-      renderChips();
+      renderCards();
     },
-    renderChips,
+    render: renderCards,
+    renderChips: renderCards,
     selectSubject,
     addSubject,
     deleteSubject,
+    getNormalizedList,
   };
 })();
 
