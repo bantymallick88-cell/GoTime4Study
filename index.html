@@ -140,21 +140,27 @@
 
     <!-- ── Top Glass Navbar ── -->
     <header class="glass header">
-      <div class="brand">
-        <div class="brand-icon-wrap" aria-label="GoTime4Study Logo">
-          <svg class="brand-infinity-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="infinityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#f59e0b" />
-                <stop offset="100%" stop-color="#10b981" />
-              </linearGradient>
-            </defs>
-            <path d="M7 8C4.23858 8 2 10.2386 2 13C2 15.7614 4.23858 18 7 18C9.5 18 11.2 15.8 12 14.5C12.8 15.8 14.5 18 17 18C19.7614 18 22 15.7614 22 13C22 10.2386 19.7614 8 17 8C14.5 8 12.8 10.2 12 11.5C11.2 10.2 9.5 8 7 8Z" stroke="url(#infinityGrad)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <span class="brand-pulse"></span>
-        </div>
-        <div class="brand-text">
-          <h1>GoTime<span>4</span>Study</h1>
+      <div class="header-left-group">
+        <button id="btnHamburger" class="icon-btn hamburger-btn" aria-label="Open Navigation Menu" title="Navigation Menu (☰)">
+          <span class="hamburger-icon">☰</span>
+        </button>
+
+        <div class="brand">
+          <div class="brand-icon-wrap" aria-label="GoTime4Study Logo">
+            <svg class="brand-infinity-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="infinityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f59e0b" />
+                  <stop offset="100%" stop-color="#10b981" />
+                </linearGradient>
+              </defs>
+              <path d="M7 8C4.23858 8 2 10.2386 2 13C2 15.7614 4.23858 18 7 18C9.5 18 11.2 15.8 12 14.5C12.8 15.8 14.5 18 17 18C19.7614 18 22 15.7614 22 13C22 10.2386 19.7614 8 17 8C14.5 8 12.8 10.2 12 11.5C11.2 10.2 9.5 8 7 8Z" stroke="url(#infinityGrad)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="brand-pulse"></span>
+          </div>
+          <div class="brand-text">
+            <h1>GoTime<span>4</span>Study</h1>
+          </div>
         </div>
       </div>
 
@@ -164,8 +170,11 @@
       </div>
 
       <div class="header-actions">
-        <button id="btnAmbient" class="icon-btn" title="Ambient Scene Studio" aria-label="Ambient scenes">
-          <span>🖼️</span><small class="btn-caption">Scenes</small>
+        <button id="btnHeaderFullscreen" class="icon-btn" title="Toggle Fullscreen (⛶)" aria-label="Fullscreen">
+          <span id="fullscreenIcon">⛶</span><small class="btn-caption">Expand</small>
+        </button>
+        <button id="btnHeaderSound" class="icon-btn" title="Toggle Sound Chime (🔊)" aria-label="Sound Toggle">
+          <span id="soundHeaderIcon">🔊</span><small class="btn-caption" id="soundHeaderLabel">Audio</small>
         </button>
         <button id="btnTheme" class="icon-btn" title="Cycle Dashboard Theme" aria-label="Toggle theme">
           <span>🌙</span><small class="btn-caption">Theme</small>
@@ -175,6 +184,70 @@
         </button>
       </div>
     </header>
+
+    <!-- ── Glassmorphic Sliding Sidebar Drawer ── -->
+    <div id="sidebarOverlay" class="sidebar-overlay" hidden></div>
+    <aside id="glassSidebar" class="glass-sidebar" hidden aria-label="Main Navigation Menu">
+      <div class="sidebar-header">
+        <div class="sidebar-user-pill" id="btnOpenProfileModal" title="Edit Local Study Profile">
+          <span class="sidebar-user-avatar" id="sidebarAvatar">🦉</span>
+          <div class="sidebar-user-info">
+            <span class="sidebar-user-name" id="sidebarNick">FocusMaster</span>
+            <span class="sidebar-user-status">⚡ Local Offline Vault</span>
+          </div>
+        </div>
+        <button id="btnCloseSidebar" class="icon-btn close-sidebar-btn" title="Close Menu (Esc)">✕</button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="sidebar-link active" data-nav="dashboard">
+          <span class="sidebar-icon">⏱️</span>
+          <span class="sidebar-text">Focus Dashboard</span>
+        </button>
+        <button class="sidebar-link" data-nav="subjects">
+          <span class="sidebar-icon">📖</span>
+          <span class="sidebar-text">Subject Manager</span>
+          <span class="sidebar-badge">YPT</span>
+        </button>
+        <button class="sidebar-link" data-nav="stats">
+          <span class="sidebar-icon">📊</span>
+          <span class="sidebar-text">Deep Analytics</span>
+        </button>
+        <button class="sidebar-link" data-nav="rooms">
+          <span class="sidebar-icon">👥</span>
+          <span class="sidebar-text">Co-Study Live Rooms</span>
+          <span class="sidebar-pulse-dot"></span>
+        </button>
+        <button class="sidebar-link" data-nav="journal">
+          <span class="sidebar-icon">📝</span>
+          <span class="sidebar-text">Personal Diary & Notes</span>
+          <span class="sidebar-lock-icon">🔒</span>
+        </button>
+        <button class="sidebar-link" data-nav="ambient">
+          <span class="sidebar-icon">🎧</span>
+          <span class="sidebar-text">Ambient Sound Studio</span>
+        </button>
+        <button class="sidebar-link" data-nav="profile">
+          <span class="sidebar-icon">👤</span>
+          <span class="sidebar-text">Local Profile (Nickname / Avatar)</span>
+        </button>
+        <button class="sidebar-link" data-nav="settings">
+          <span class="sidebar-icon">⚙️</span>
+          <span class="sidebar-text">Timer & Sound Config</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-privacy-badge">
+          <span>🔒 100% Offline · No Login Required</span>
+          <small>All preferences saved in browser storage</small>
+        </div>
+        <div class="sidebar-actions-row">
+          <button id="btnSidebarTheme" class="ctrl-btn ghost small">🌙 Theme</button>
+          <button id="btnSidebarSound" class="ctrl-btn ghost small">🔊 Sound</button>
+        </div>
+      </div>
+    </aside>
 
     <!-- ── Hero Dashboard Header ── -->
     <section class="hero-header">
@@ -1107,6 +1180,31 @@
         <input type="range" id="setVolume" min="0" max="100" value="70" />
       </div>
       <button id="btnSaveSettings" class="ctrl-btn primary small">Save Configuration</button>
+    </div>
+  </div>
+
+  <!-- ══════════ Local Profile Modal (No Login Required) ══════════ -->
+  <div class="overlay" id="localProfileOverlay" hidden>
+    <div class="glass modal profile-modal">
+      <div class="modal-head">
+        <h2>👤 Edit Local Study Profile</h2>
+        <button class="icon-btn close-btn" data-close="localProfileOverlay">✕</button>
+      </div>
+      <div class="profile-modal-body">
+        <p class="hint-sm">Customize your study avatar & nickname. Saved locally in your browser storage with zero login or signup needed.</p>
+
+        <div class="form-group" style="margin-top: 12px;">
+          <label class="field-label" for="profileNickInput">Study Nickname</label>
+          <input type="text" id="profileNickInput" class="txt-input" maxlength="18" placeholder="e.g. FocusMaster" />
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">Choose Avatar</label>
+          <div id="profileAvatarPicker" class="avatar-picker"></div>
+        </div>
+
+        <button id="btnSaveProfile" class="ctrl-btn primary small" style="margin-top: 14px; width: 100%;">Save Local Profile</button>
+      </div>
     </div>
   </div>
 

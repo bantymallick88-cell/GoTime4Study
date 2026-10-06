@@ -2087,17 +2087,114 @@ const SubjectLogger = (() => {
 const UI = (() => {
   const THEMES = ['dark', 'light', 'lofi', 'rain'];
   const THEME_ICONS = { dark: '🌙', light: '☀️', lofi: '🎶', rain: '🌧️' };
+  const AVATAR_LIST = ['🦉', '🐱', '🦊', '🐼', '🐺', '🦁', '🚀', '⚡', '☕', '🧠', '✨', '🎯', '📚', '🔥', '💎', '🌙', '🎧', '🥑'];
 
   function overlay(id, show) {
     const el = $('#' + id);
     if (el) el.hidden = !show;
   }
+
   function applyTheme(t) {
     document.documentElement.dataset.theme = t;
     const btn = $('#btnTheme');
     if (btn) btn.textContent = THEME_ICONS[t] || '🌙';
+    const btnSidebarTheme = $('#btnSidebarTheme');
+    if (btnSidebarTheme) btnSidebarTheme.textContent = `${THEME_ICONS[t] || '🌙'} Theme`;
     Store.d.theme = t; Store.save();
     if (typeof Chart !== 'undefined') Stats.draw();
+  }
+
+  function syncSoundUI() {
+    const chime = !!Store.d.settings.chime;
+    const soundHeaderIcon = $('#soundHeaderIcon');
+    const soundHeaderLabel = $('#soundHeaderLabel');
+    const btnSidebarSound = $('#btnSidebarSound');
+    const setChime = $('#setChime');
+
+    if (soundHeaderIcon) soundHeaderIcon.textContent = chime ? '🔊' : '🔇';
+    if (soundHeaderLabel) soundHeaderLabel.textContent = chime ? 'Audio' : 'Muted';
+    if (btnSidebarSound) btnSidebarSound.textContent = chime ? '🔊 Audio ON' : '🔇 Audio OFF';
+    if (setChime) setChime.checked = chime;
+  }
+
+  function syncProfileUI() {
+    const p = Store.d.profile || { nick: 'FocusMaster', avatar: '🦉' };
+    const nick = p.nick && p.nick.trim() ? p.nick.trim() : 'FocusMaster';
+    const avatar = p.avatar || '🦉';
+
+    const sidebarNick = $('#sidebarNick');
+    const sidebarAvatar = $('#sidebarAvatar');
+    if (sidebarNick) sidebarNick.textContent = nick;
+    if (sidebarAvatar) sidebarAvatar.textContent = avatar;
+
+    const nicknameInput = $('#nicknameInput');
+    if (nicknameInput) nicknameInput.value = nick;
+  }
+
+  function openSidebar() {
+    const overlayEl = $('#sidebarOverlay');
+    const sidebarEl = $('#glassSidebar');
+    if (overlayEl && sidebarEl) {
+      overlayEl.hidden = false;
+      sidebarEl.hidden = false;
+      syncProfileUI();
+      syncSoundUI();
+      // Reflow for transition
+      void overlayEl.offsetWidth;
+      overlayEl.classList.add('active');
+      sidebarEl.classList.add('active');
+    }
+  }
+
+  function closeSidebar() {
+    const overlayEl = $('#sidebarOverlay');
+    const sidebarEl = $('#glassSidebar');
+    if (overlayEl && sidebarEl) {
+      overlayEl.classList.remove('active');
+      sidebarEl.classList.remove('active');
+      setTimeout(() => {
+        if (!overlayEl.classList.contains('active')) {
+          overlayEl.hidden = true;
+          sidebarEl.hidden = true;
+        }
+      }, 300);
+    }
+  }
+
+  function openProfileModal() {
+    const p = Store.d.profile || { nick: 'FocusMaster', avatar: '🦉' };
+    const nickInput = $('#profileNickInput');
+    if (nickInput) nickInput.value = p.nick || 'FocusMaster';
+
+    const picker = $('#profileAvatarPicker');
+    if (picker) {
+      picker.innerHTML = AVATAR_LIST.map((av) => `
+        <button type="button" class="avatar-choice ${av === (p.avatar || '🦉') ? 'selected' : ''}" data-avatar="${av}" aria-label="Avatar ${av}">
+          ${av}
+        </button>
+      `).join('');
+
+      picker.querySelectorAll('.avatar-choice').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          picker.querySelectorAll('.avatar-choice').forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+    }
+
+    overlay('localProfileOverlay', true);
+  }
+
+  function activateSideTab(panelId) {
+    const targetTab = $(`.side-tab[data-panel="${panelId}"]`);
+    if (targetTab) {
+      $$('.side-tab').forEach((x) => x.classList.remove('active'));
+      $$('.panel').forEach((p) => p.classList.remove('active'));
+      targetTab.classList.add('active');
+      const panel = $('#' + panelId);
+      if (panel) panel.classList.add('active');
+      if (panelId === 'panelStats') Stats.draw();
+    }
   }
 
   return {
@@ -2112,6 +2209,140 @@ const UI = (() => {
           applyTheme(THEMES[(idx + 1) % THEMES.length]);
         });
       }
+      const btnSidebarTheme = $('#btnSidebarTheme');
+      if (btnSidebarTheme) {
+        btnSidebarTheme.addEventListener('click', () => {
+          const cur = document.documentElement.dataset.theme;
+          const idx = THEMES.indexOf(cur);
+          applyTheme(THEMES[(idx + 1) % THEMES.length]);
+        });
+      }
+
+      // sound & chime sync
+      syncSoundUI();
+      const btnHeaderSound = $('#btnHeaderSound');
+      if (btnHeaderSound) {
+        btnHeaderSound.addEventListener('click', () => {
+          Store.d.settings.chime = !Store.d.settings.chime;
+          Store.save();
+          syncSoundUI();
+          toast(Store.d.settings.chime ? 'Sound Effects Enabled 🔊' : 'Sound Effects Muted 🔇', Store.d.settings.chime ? 'good' : '');
+        });
+      }
+      const btnSidebarSound = $('#btnSidebarSound');
+      if (btnSidebarSound) {
+        btnSidebarSound.addEventListener('click', () => {
+          Store.d.settings.chime = !Store.d.settings.chime;
+          Store.save();
+          syncSoundUI();
+          toast(Store.d.settings.chime ? 'Sound Effects Enabled 🔊' : 'Sound Effects Muted 🔇', Store.d.settings.chime ? 'good' : '');
+        });
+      }
+
+      // fullscreen toggle
+      const btnFullscreen = $('#btnHeaderFullscreen');
+      const fullscreenIcon = $('#fullscreenIcon');
+      function updateFullscreenIcon() {
+        const isFull = !!document.fullscreenElement;
+        if (fullscreenIcon) fullscreenIcon.textContent = isFull ? '🗗' : '⛶';
+        if (btnFullscreen) {
+          const cap = btnFullscreen.querySelector('.btn-caption');
+          if (cap) cap.textContent = isFull ? 'Exit' : 'Expand';
+        }
+      }
+      if (btnFullscreen) {
+        btnFullscreen.addEventListener('click', () => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          }
+        });
+      }
+      document.addEventListener('fullscreenchange', updateFullscreenIcon);
+
+      // hamburger & glassmorphic sidebar
+      const btnHamburger = $('#btnHamburger');
+      const btnCloseSidebar = $('#btnCloseSidebar');
+      const sidebarOverlayEl = $('#sidebarOverlay');
+      if (btnHamburger) btnHamburger.addEventListener('click', openSidebar);
+      if (btnCloseSidebar) btnCloseSidebar.addEventListener('click', closeSidebar);
+      if (sidebarOverlayEl) sidebarOverlayEl.addEventListener('click', closeSidebar);
+
+      // sidebar user profile pill
+      const btnOpenProfile = $('#btnOpenProfileModal');
+      if (btnOpenProfile) btnOpenProfile.addEventListener('click', () => { closeSidebar(); openProfileModal(); });
+
+      // sidebar navigation links
+      $$('.sidebar-link').forEach((link) => {
+        link.addEventListener('click', () => {
+          const nav = link.dataset.nav;
+          $$('.sidebar-link').forEach((l) => l.classList.remove('active'));
+          link.classList.add('active');
+          closeSidebar();
+
+          switch (nav) {
+            case 'dashboard':
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              break;
+            case 'subjects':
+              activateSideTab('panelTools');
+              const subjSection = $('.subject-card') || $('#panelTools');
+              if (subjSection) subjSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              break;
+            case 'stats':
+              activateSideTab('panelStats');
+              const statsEl = $('#panelStats');
+              if (statsEl) statsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              break;
+            case 'rooms':
+              activateSideTab('panelRoom');
+              const roomEl = $('#panelRoom');
+              if (roomEl) roomEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              break;
+            case 'journal':
+              activateSideTab('panelTools');
+              const diaryEl = $('#diaryCard') || $('#panelTools');
+              if (diaryEl) diaryEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              break;
+            case 'ambient':
+              overlay('ambientOverlay', true);
+              break;
+            case 'profile':
+              openProfileModal();
+              break;
+            case 'settings':
+              loadSettings();
+              overlay('settingsOverlay', true);
+              break;
+          }
+        });
+      });
+
+      // local profile modal handling
+      const btnSaveProfile = $('#btnSaveProfile');
+      if (btnSaveProfile) {
+        btnSaveProfile.addEventListener('click', () => {
+          const nickInput = $('#profileNickInput');
+          const nick = nickInput ? nickInput.value.trim() || 'FocusMaster' : 'FocusMaster';
+          const selAvatar = $('#profileAvatarPicker .avatar-choice.selected')?.dataset.avatar || '🦉';
+
+          Store.d.profile = { nick, avatar: selAvatar };
+          Store.save();
+          syncProfileUI();
+          overlay('localProfileOverlay', false);
+          toast('Local profile saved ✓', 'good');
+
+          // If inside a live room, update my nick & avatar
+          if (Rooms && Rooms.inRoom) {
+            Rooms.broadcastState();
+          }
+          if (typeof LocalLeaderboard !== 'undefined' && LocalLeaderboard.render) {
+            LocalLeaderboard.render();
+          }
+        });
+      }
+      syncProfileUI();
 
       // side tabs
       $$('.side-tab').forEach((t) => t.addEventListener('click', () => {
@@ -2151,7 +2382,9 @@ const UI = (() => {
           s.rounds = getVal('#setRounds', 4);
           s.autoStart = getChecked('#setAutoStart'); s.chime = getChecked('#setChime');
           s.volume = getVal('#setVolume', 70);
-          Store.save(); overlay('settingsOverlay', false);
+          Store.save();
+          syncSoundUI();
+          overlay('settingsOverlay', false);
           Timer.reset(); Timer.setMode(Timer.mode);
           toast('Settings saved ✓', 'good');
         });
