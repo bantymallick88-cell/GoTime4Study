@@ -553,6 +553,68 @@ img, svg, canvas, audio, video, iframe {
   flex-shrink: 0;
 }
 
+/* ── 4.3 Sidebar Quick Action Controls Grid ────────────────── */
+.sidebar-quick-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 20, 32, 0.4);
+}
+
+.sidebar-section-title {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-emerald);
+  margin-bottom: 10px;
+}
+
+.sidebar-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.sidebar-quick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+
+.sidebar-quick-btn:hover,
+.sidebar-quick-btn:active {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: var(--accent-emerald);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+.sidebar-quick-btn .sq-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.sidebar-quick-btn .sq-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.sidebar-quick-btn:hover .sq-label {
+  color: #fff;
+}
+
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
@@ -4487,56 +4549,63 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 @media (max-width: 768px) {
-  .nav-center-pill {
+  /* Hide the 4 top-right header action icons and center pill from the top navbar on mobile */
+  .header .header-actions,
+  .header .nav-center-pill {
     display: none !important;
   }
 
+  /* Clean Top Navigation Bar: [Menu ☰] [Infinity ∞] [GoTime4Study Logo] */
   .header {
-    padding: 8px 14px;
-    gap: 8px;
-    justify-content: space-between;
+    padding: 10px 16px;
+    gap: 12px;
+    justify-content: flex-start;
   }
 
   .header-left-group {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-right: auto;
-    flex-shrink: 0;
+    gap: 10px;
+    width: 100%;
+    flex-grow: 1;
     min-width: 0;
   }
 
   .hamburger-btn {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    font-size: 1rem;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    font-size: 1.15rem;
     flex-shrink: 0;
   }
 
   .brand {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    gap: 10px;
+    flex-grow: 1;
+    margin-left: 10px;
     min-width: 0;
   }
 
   .brand-icon-wrap {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     border-radius: 10px;
     flex-shrink: 0;
   }
 
   .brand-infinity-svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
 
   .brand-text {
-    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex-grow: 1;
     position: relative !important;
     z-index: 99 !important;
   }
@@ -4544,45 +4613,13 @@ input[type="range"]::-webkit-slider-thumb {
   .brand-text h1,
   header h1,
   header .logo {
-    font-size: 1.05rem;
+    font-size: 1.25rem;
     letter-spacing: -0.01em;
     line-height: 1.1;
     white-space: nowrap !important;
     position: relative !important;
     z-index: 99 !important;
     margin: 0;
-  }
-
-  /* Right-aligned action icons flex box */
-  .header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    flex-shrink: 0;
-    margin-left: auto;
-  }
-
-  .header-actions .icon-btn {
-    padding: 0;
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    display: grid;
-    place-items: center;
-    font-size: 18px;
-    border-radius: var(--r-full);
-  }
-
-  .header-actions .icon-btn span {
-    font-size: 18px;
-    line-height: 1;
-    display: grid;
-    place-items: center;
-  }
-
-  .header-actions .icon-btn .btn-caption {
-    display: none !important;
   }
 
   .footer-top,

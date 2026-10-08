@@ -204,6 +204,29 @@
         <button id="btnCloseSidebar" class="icon-btn close-sidebar-btn" title="Close Menu (Esc)">✕</button>
       </div>
 
+      <!-- Quick Action Controls Grid for Mobile & Drawer Access -->
+      <div class="sidebar-quick-section">
+        <span class="sidebar-section-title">⚡ Quick Header Controls</span>
+        <div class="sidebar-quick-grid">
+          <button id="btnSidebarFullscreen" class="sidebar-quick-btn" title="Toggle Fullscreen (⛶)">
+            <span class="sq-icon" id="sidebarFullscreenIcon">⛶</span>
+            <span class="sq-label">Fullscreen</span>
+          </button>
+          <button id="btnSidebarSound" class="sidebar-quick-btn" title="Toggle Sound Chime (🔊)">
+            <span class="sq-icon" id="sidebarSoundIcon">🔊</span>
+            <span class="sq-label" id="sidebarSoundLabel">Audio</span>
+          </button>
+          <button id="btnSidebarTheme" class="sidebar-quick-btn" title="Cycle Dashboard Theme (🌙)">
+            <span class="sq-icon">🌙</span>
+            <span class="sq-label">Theme</span>
+          </button>
+          <button id="btnSidebarSettings" class="sidebar-quick-btn" title="Timer & Sound Settings (⚙️)">
+            <span class="sq-icon">⚙️</span>
+            <span class="sq-label">Config</span>
+          </button>
+        </div>
+      </div>
+
       <nav class="sidebar-nav">
         <button class="sidebar-link active" data-nav="dashboard">
           <span class="sidebar-icon">⏱️</span>
@@ -245,10 +268,6 @@
         <div class="sidebar-privacy-badge">
           <span>🔒 100% Offline · No Login Required</span>
           <small>All preferences saved in browser storage</small>
-        </div>
-        <div class="sidebar-actions-row">
-          <button id="btnSidebarTheme" class="ctrl-btn ghost small">🌙 Theme</button>
-          <button id="btnSidebarSound" class="ctrl-btn ghost small">🔊 Sound</button>
         </div>
       </div>
     </aside>

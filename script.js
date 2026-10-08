@@ -2113,12 +2113,14 @@ const UI = (() => {
     const chime = !!Store.d.settings.chime;
     const soundHeaderIcon = $('#soundHeaderIcon');
     const soundHeaderLabel = $('#soundHeaderLabel');
-    const btnSidebarSound = $('#btnSidebarSound');
+    const sidebarSoundIcon = $('#sidebarSoundIcon');
+    const sidebarSoundLabel = $('#sidebarSoundLabel');
     const setChime = $('#setChime');
 
     if (soundHeaderIcon) soundHeaderIcon.textContent = chime ? '🔊' : '🔇';
     if (soundHeaderLabel) soundHeaderLabel.textContent = chime ? 'Audio' : 'Muted';
-    if (btnSidebarSound) btnSidebarSound.textContent = chime ? '🔊 Audio ON' : '🔇 Audio OFF';
+    if (sidebarSoundIcon) sidebarSoundIcon.textContent = chime ? '🔊' : '🔇';
+    if (sidebarSoundLabel) sidebarSoundLabel.textContent = chime ? 'Audio' : 'Muted';
     if (setChime) setChime.checked = chime;
   }
 
@@ -2207,64 +2209,72 @@ const UI = (() => {
       // theme
       applyTheme(Store.d.theme || 'dark');
       const btnTheme = $('#btnTheme');
-      if (btnTheme) {
-        btnTheme.addEventListener('click', () => {
-          const cur = document.documentElement.dataset.theme;
-          const idx = THEMES.indexOf(cur);
-          applyTheme(THEMES[(idx + 1) % THEMES.length]);
-        });
-      }
       const btnSidebarTheme = $('#btnSidebarTheme');
-      if (btnSidebarTheme) {
-        btnSidebarTheme.addEventListener('click', () => {
-          const cur = document.documentElement.dataset.theme;
-          const idx = THEMES.indexOf(cur);
-          applyTheme(THEMES[(idx + 1) % THEMES.length]);
-        });
+      function cycleTheme() {
+        const cur = document.documentElement.dataset.theme;
+        const idx = THEMES.indexOf(cur);
+        applyTheme(THEMES[(idx + 1) % THEMES.length]);
       }
+      if (btnTheme) btnTheme.addEventListener('click', cycleTheme);
+      if (btnSidebarTheme) btnSidebarTheme.addEventListener('click', cycleTheme);
 
       // sound & chime sync
       syncSoundUI();
       const btnHeaderSound = $('#btnHeaderSound');
-      if (btnHeaderSound) {
-        btnHeaderSound.addEventListener('click', () => {
-          Store.d.settings.chime = !Store.d.settings.chime;
-          Store.save();
-          syncSoundUI();
-          toast(Store.d.settings.chime ? 'Sound Effects Enabled 🔊' : 'Sound Effects Muted 🔇', Store.d.settings.chime ? 'good' : '');
-        });
-      }
       const btnSidebarSound = $('#btnSidebarSound');
-      if (btnSidebarSound) {
-        btnSidebarSound.addEventListener('click', () => {
-          Store.d.settings.chime = !Store.d.settings.chime;
-          Store.save();
-          syncSoundUI();
-          toast(Store.d.settings.chime ? 'Sound Effects Enabled 🔊' : 'Sound Effects Muted 🔇', Store.d.settings.chime ? 'good' : '');
-        });
+      function toggleSoundChime() {
+        Store.d.settings.chime = !Store.d.settings.chime;
+        Store.save();
+        syncSoundUI();
+        toast(Store.d.settings.chime ? 'Sound Effects Enabled 🔊' : 'Sound Effects Muted 🔇', Store.d.settings.chime ? 'good' : '');
       }
+      if (btnHeaderSound) btnHeaderSound.addEventListener('click', toggleSoundChime);
+      if (btnSidebarSound) btnSidebarSound.addEventListener('click', toggleSoundChime);
 
       // fullscreen toggle
       const btnFullscreen = $('#btnHeaderFullscreen');
+      const btnSidebarFullscreen = $('#btnSidebarFullscreen');
       const fullscreenIcon = $('#fullscreenIcon');
+      const sidebarFullscreenIcon = $('#sidebarFullscreenIcon');
       function updateFullscreenIcon() {
         const isFull = !!document.fullscreenElement;
         if (fullscreenIcon) fullscreenIcon.textContent = isFull ? '🗗' : '⛶';
+        if (sidebarFullscreenIcon) sidebarFullscreenIcon.textContent = isFull ? '🗗' : '⛶';
         if (btnFullscreen) {
           const cap = btnFullscreen.querySelector('.btn-caption');
           if (cap) cap.textContent = isFull ? 'Exit' : 'Expand';
         }
       }
-      if (btnFullscreen) {
-        btnFullscreen.addEventListener('click', () => {
-          if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {});
-          } else if (document.exitFullscreen) {
-            document.exitFullscreen().catch(() => {});
-          }
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+      if (btnFullscreen) btnFullscreen.addEventListener('click', toggleFullscreen);
+      if (btnSidebarFullscreen) {
+        btnSidebarFullscreen.addEventListener('click', () => {
+          toggleFullscreen();
+          closeSidebar();
         });
       }
       document.addEventListener('fullscreenchange', updateFullscreenIcon);
+
+      // settings buttons
+      const btnSettings = $('#btnSettings');
+      const btnSidebarSettings = $('#btnSidebarSettings');
+      function openSettingsModal() {
+        loadSettings();
+        overlay('settingsOverlay', true);
+      }
+      if (btnSettings) btnSettings.addEventListener('click', openSettingsModal);
+      if (btnSidebarSettings) {
+        btnSidebarSettings.addEventListener('click', () => {
+          closeSidebar();
+          openSettingsModal();
+        });
+      }
 
       // hamburger & glassmorphic sidebar
       const btnHamburger = $('#btnHamburger');
