@@ -2371,9 +2371,7 @@ const UI = (() => {
 
       // modals
       const btnAmbient = $('#btnAmbient');
-      const btnSettings = $('#btnSettings');
       if (btnAmbient) btnAmbient.addEventListener('click', () => overlay('ambientOverlay', true));
-      if (btnSettings) btnSettings.addEventListener('click', () => { loadSettings(); overlay('settingsOverlay', true); });
       $$('.close-btn').forEach((b) => b.addEventListener('click', () => overlay(b.dataset.close, false)));
       $$('.overlay').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o) o.hidden = true; }));
 
