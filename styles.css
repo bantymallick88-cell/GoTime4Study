@@ -4548,8 +4548,10 @@ input[type="range"]::-webkit-slider-thumb {
     white-space: nowrap;
   }
 
-  /* Hide fullscreen button completely on mobile */
-  #btnHeaderFullscreen {
+  /* Hide fullscreen button completely on Android/mobile screens */
+  .fullscreen-btn,
+  #btnHeaderFullscreen,
+  button:has(svg) {
     display: none !important;
   }
 
