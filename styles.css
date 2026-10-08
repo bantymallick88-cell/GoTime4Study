@@ -4486,13 +4486,20 @@ input[type="range"]::-webkit-slider-thumb {
   color: #34d399;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .nav-center-pill {
-    display: none;
+    display: none !important;
   }
-}
 
-@media (max-width: 600px) {
+  /* Hide the expand / fullscreen button between logo and audio icon on mobile */
+  #btnHeaderFullscreen,
+  .fullscreen-btn,
+  button[title*="Fullscreen"],
+  button[aria-label*="Fullscreen"],
+  header button:has(svg[class*="expand"]) {
+    display: none !important;
+  }
+
   .header {
     padding: 8px 14px;
     gap: 8px;
@@ -4539,20 +4546,20 @@ input[type="range"]::-webkit-slider-thumb {
 
   .brand-text {
     flex-shrink: 0;
+    position: relative !important;
+    z-index: 99 !important;
   }
 
-  .brand-text h1 {
+  .brand-text h1,
+  header h1,
+  header .logo {
     font-size: 1.05rem;
     letter-spacing: -0.01em;
     line-height: 1.1;
-    white-space: nowrap;
-  }
-
-  /* Hide fullscreen button completely on Android/mobile screens */
-  .fullscreen-btn,
-  #btnHeaderFullscreen,
-  button:has(svg) {
-    display: none !important;
+    white-space: nowrap !important;
+    position: relative !important;
+    z-index: 99 !important;
+    margin: 0;
   }
 
   /* Right-aligned action icons flex box */
@@ -4599,18 +4606,6 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
-@media (max-width: 768px) {
-  button[title*="Fullscreen"],
-  button[aria-label*="Fullscreen"],
-  header button:has(svg[class*="expand"]) {
-    display: none !important;
-  }
-  header h1, header .logo {
-    position: relative !important;
-    z-index: 99 !important;
-    white-space: nowrap !important;
-  }
-}
 
 
 
