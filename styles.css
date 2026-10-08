@@ -4491,15 +4491,6 @@ input[type="range"]::-webkit-slider-thumb {
     display: none !important;
   }
 
-  /* Hide the expand / fullscreen button between logo and audio icon on mobile */
-  #btnHeaderFullscreen,
-  .fullscreen-btn,
-  button[title*="Fullscreen"],
-  button[aria-label*="Fullscreen"],
-  header button:has(svg[class*="expand"]) {
-    display: none !important;
-  }
-
   .header {
     padding: 8px 14px;
     gap: 8px;
@@ -4605,6 +4596,17 @@ input[type="range"]::-webkit-slider-thumb {
     justify-content: center;
   }
 }
+
+/* ── Android Phones Only: Remove Fullscreen/Expand Header Icon ── */
+html.is-android #btnHeaderFullscreen,
+html.is-android .fullscreen-btn,
+body.is-android #btnHeaderFullscreen,
+body.is-android .fullscreen-btn,
+.is-android header button[title*="Fullscreen"],
+.is-android header button[aria-label*="Fullscreen"] {
+  display: none !important;
+}
+
 
 
 

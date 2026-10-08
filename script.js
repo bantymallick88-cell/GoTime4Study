@@ -5,6 +5,11 @@
    ============================================================ */
 'use strict';
 
+// Android Device Detection for responsive header controls
+if (typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent || navigator.vendor || window.opera)) {
+  document.documentElement.classList.add('is-android');
+}
+
 /* ════════════════════════════════════════════════════════════
    1. STORE — persistent state (localStorage)
    ════════════════════════════════════════════════════════════ */
