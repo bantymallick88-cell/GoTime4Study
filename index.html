@@ -141,7 +141,7 @@
   <div class="mesh-glow mesh-2" aria-hidden="true"></div>
 
   <!-- ══════════ SaaS App Container ══════════ -->
-  <div id="app">
+  <div id="app" class="max-w-7xl mx-auto w-full">
 
     <!-- ── Top Glass Navbar ── -->
     <header class="glass header">
@@ -164,7 +164,7 @@
             <span class="brand-pulse"></span>
           </div>
           <div class="brand-text">
-            <h1>GoTime<span>4</span>Study</h1>
+            <h1 class="brand-title">GoTime<span>4</span>Study</h1>
           </div>
         </div>
       </div>
@@ -174,15 +174,19 @@
         <span class="pill-text">DEEP FLOW STATE ACTIVE</span>
       </div>
 
-      <div class="header-actions">
-        <button id="btnHeaderSound" class="icon-btn" title="Toggle Sound Chime (🔊)" aria-label="Sound Toggle">
-          <span id="soundHeaderIcon">🔊</span><small class="btn-caption" id="soundHeaderLabel">Audio</small>
-        </button>
-        <button id="btnTheme" class="icon-btn" title="Cycle Dashboard Theme" aria-label="Toggle theme">
-          <span>🌙</span><small class="btn-caption">Theme</small>
-        </button>
-        <button id="btnSettings" class="icon-btn" title="Timer & Sound Settings" aria-label="Settings">
-          <span>⚙️</span><small class="btn-caption">Config</small>
+      <div class="header-right-group">
+        <div class="header-actions">
+          <button id="btnHeaderSound" class="icon-btn" title="Toggle Sound Chime (🔊)" aria-label="Sound Toggle">
+            <span id="soundHeaderIcon">🔊</span><small class="btn-caption" id="soundHeaderLabel">Audio</small>
+          </button>
+          <button id="btnSettings" class="icon-btn" title="Timer & Sound Settings" aria-label="Settings">
+            <span>⚙️</span><small class="btn-caption">Config</small>
+          </button>
+        </div>
+
+        <!-- Sun/Moon Theme Toggle Button on the absolute RIGHT end of header -->
+        <button id="themeToggleBtn" class="theme-quick-toggle-btn header-extreme-right-btn" aria-label="Toggle Dark / Light Theme" title="Toggle Dark / Light Theme">
+          <span class="theme-toggle-icon" id="headerThemeToggleIcon">☀️</span>
         </button>
       </div>
     </header>
@@ -228,6 +232,11 @@
         <button class="sidebar-link active" data-nav="dashboard">
           <span class="sidebar-icon">⏱️</span>
           <span class="sidebar-text">Focus Dashboard</span>
+        </button>
+        <button class="sidebar-link" data-nav="top30-leaderboard" data-modal="leaderboardModal" id="btnSidebarTop30Leaderboard">
+          <span class="sidebar-icon">🏆</span>
+          <span class="sidebar-text">Top 30 Focus Leaderboard</span>
+          <span class="sidebar-pulse-dot"></span>
         </button>
         <button class="sidebar-link" data-nav="subjects">
           <span class="sidebar-icon">📖</span>
@@ -408,20 +417,87 @@
 
           <!-- Mode Selector Tabs -->
           <nav class="mode-tabs" role="tablist">
-            <button class="mode-tab active" data-mode="focus" role="tab">🍅 Focus</button>
-            <button class="mode-tab" data-mode="short" role="tab">☕ Short Break</button>
-            <button class="mode-tab" data-mode="long" role="tab">🛋️ Long Break</button>
-            <button class="mode-tab" data-mode="custom" role="tab">✨ Custom</button>
-            <button class="mode-tab" data-mode="stopwatch" role="tab">⏱ Stopwatch</button>
+            <button class="mode-tab active" data-mode="focus" data-tab="focus" role="tab">🍅 Focus</button>
+            <button class="mode-tab" data-mode="short" data-tab="short" role="tab">☕ Short Break</button>
+            <button class="mode-tab" data-mode="long" data-tab="long" role="tab">🛋️ Long Break</button>
+            <button class="mode-tab" data-mode="custom" data-tab="custom" role="tab">✨ Custom</button>
+            <button class="mode-tab" data-mode="stopwatch" data-tab="stopwatch" role="tab">⏱ Stopwatch</button>
           </nav>
 
-          <!-- Custom Timer Inline Dock -->
-          <div id="customTimerControls" class="custom-timer-controls" hidden>
-            <label class="custom-dur-label">
-              <span>Duration (Minutes):</span>
-              <input type="number" id="inputCustomDuration" min="1" max="480" value="45" />
-            </label>
-            <button id="btnSetCustomDuration" class="ctrl-btn primary small">Apply Duration</button>
+          <!-- Advanced Custom Timer Setup Menu (Directly between mode tabs & circular dial) -->
+          <div id="customTimerControls" class="hidden custom-setup-panel custom-timer-controls custom-timer-session-settings" data-component="custom-timer-settings" style="display: none;">
+            <div class="custom-controls-header">
+              <span class="custom-header-badge">⚙️ Custom Timer Settings</span>
+              <span class="hint-sm">Configure duration &amp; category for active session</span>
+            </div>
+
+            <!-- Custom Study & Break Duration Inputs (Minutes & Seconds) -->
+            <div class="custom-timer-row">
+              <div class="custom-dur-group">
+                <span class="custom-field-title">⏱️ Custom Duration</span>
+                <div class="custom-time-inputs">
+                  <label class="custom-time-unit" title="Study Minutes">
+                    <input type="number" id="inputCustomMinutes" min="0" max="720" value="45" placeholder="Min" aria-label="Study Minutes" />
+                    <span class="unit-label">min</span>
+                  </label>
+                  <span class="time-sep">:</span>
+                  <label class="custom-time-unit" title="Study Seconds">
+                    <input type="number" id="inputCustomSeconds" min="0" max="59" value="0" placeholder="Sec" aria-label="Study Seconds" />
+                    <span class="unit-label">sec</span>
+                  </label>
+                  <!-- Backward-compatible hidden input for legacy references -->
+                  <input type="number" id="inputCustomDuration" min="1" max="720" value="45" style="display: none;" />
+                </div>
+              </div>
+
+              <div class="custom-dur-group">
+                <span class="custom-field-title">☕ Break Duration</span>
+                <div class="custom-time-inputs">
+                  <label class="custom-time-unit" title="Break Minutes">
+                    <input type="number" id="inputCustomBreakDuration" min="1" max="180" value="10" placeholder="Min" aria-label="Break Minutes" />
+                    <span class="unit-label">min</span>
+                  </label>
+                  <span class="time-sep">:</span>
+                  <label class="custom-time-unit" title="Break Seconds">
+                    <input type="number" id="inputCustomBreakSeconds" min="0" max="59" value="0" placeholder="Sec" aria-label="Break Seconds" />
+                    <span class="unit-label">sec</span>
+                  </label>
+                </div>
+              </div>
+
+              <button id="btnSetCustomDuration" class="ctrl-btn primary small" title="Apply Custom Settings">
+                <span>✓ Apply</span>
+              </button>
+            </div>
+
+            <!-- Category Selection Options: 'Revision', 'Test', and 'Theory Class' -->
+            <div class="custom-cfg-group">
+              <span class="custom-cfg-label">Category:</span>
+              <div class="custom-tag-pills" id="customTagPills">
+                <button type="button" class="custom-tag-btn" data-tag="revision" title="Revision &amp; Notes Review">
+                  <span>🔄 Revision</span>
+                </button>
+                <button type="button" class="custom-tag-btn" data-tag="test" title="Practice Tests &amp; Problem Solving">
+                  <span>📝 Test</span>
+                </button>
+                <button type="button" class="custom-tag-btn active" data-tag="class" title="Theory Class &amp; Concepts">
+                  <span>📖 Theory Class</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Time Breakdown Period Toggle -->
+            <div class="custom-cfg-group">
+              <span class="custom-cfg-label">AI Telemetry Scope:</span>
+              <div class="custom-ai-scope-pills" id="customAiScopeTabs" role="tablist">
+                <button type="button" class="custom-scope-btn active" id="btnCustomScopeWeek" data-period="weekly" role="tab" aria-selected="true">
+                  <span>📅 Weekly (7D)</span>
+                </button>
+                <button type="button" class="custom-scope-btn" id="btnCustomScopeMonth" data-period="monthly" role="tab" aria-selected="false">
+                  <span>🗓️ Monthly (30D)</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Futuristic Glowing Ring -->
@@ -467,6 +543,65 @@
             </button>
           </div>
 
+        </div>
+
+        <!-- Card 3: Smart AI Study Breakdown & Analytics (Balanced in Left Column under Timer) -->
+        <div class="glass widget-card ai-analytics-card" id="aiAnalyticsCard">
+          <div class="widget-card-head">
+            <div class="widget-icon-pill icon-emerald">🤖</div>
+            <div class="whead-text-wrap">
+              <div class="whead-title-row">
+                <h2>AI Study Breakdown & Analytics</h2>
+                <span class="ai-spark-chip" id="aiScopeStatusChip">📅 7D WEEKLY</span>
+              </div>
+              <p class="hint-sm">Continuous telemetry balancing concept theory, active recall & test practice.</p>
+            </div>
+          </div>
+
+          <!-- Dynamic Single-Line Smart AI Suggestion Badge -->
+          <div class="ai-insight-badge" id="aiInsightBadge">
+            <span class="ai-insight-icon" id="aiInsightIcon">💡</span>
+            <span class="ai-insight-text" id="aiInsightText">💡 AI Insight: Calculate distribution...</span>
+          </div>
+
+          <!-- Clean Breakdown Progress Bars & Hours Badges -->
+          <div class="ai-breakdown-list" id="aiBreakdownList">
+            <div class="ai-tag-metric" data-tag="class">
+              <div class="ai-metric-head">
+                <span class="ai-metric-title">📖 Theory Class</span>
+                <span class="ai-metric-val" id="aiValClass">Theory: 0.0 Hours</span>
+              </div>
+              <div class="ai-progress-track">
+                <div class="ai-progress-bar bar-teal" id="aiBarClass" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="ai-tag-metric" data-tag="revision">
+              <div class="ai-metric-head">
+                <span class="ai-metric-title">🔄 Revision</span>
+                <span class="ai-metric-val" id="aiValRevision">Revision: 0.0 Hours</span>
+              </div>
+              <div class="ai-progress-track">
+                <div class="ai-progress-bar bar-amber" id="aiBarRevision" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="ai-tag-metric" data-tag="test">
+              <div class="ai-metric-head">
+                <span class="ai-metric-title">🎯 Test</span>
+                <span class="ai-metric-val" id="aiValTest">Test: 0.0 Hours</span>
+              </div>
+              <div class="ai-progress-track">
+                <div class="ai-progress-bar bar-cyan" id="aiBarTest" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Logged Breakdown Footer -->
+          <div class="ai-card-footer">
+            <span class="hint-sm" id="aiBenchmarkHint">Ideal Benchmark: <b>40% Theory · 35% Revision · 25% Tests</b></span>
+            <span class="ai-total-focus" id="aiTotalFocusTag">Total: 0.0 Hours</span>
+          </div>
         </div>
 
         <div class="keyboard-guide">
@@ -537,10 +672,13 @@
         <div class="glass widget-card local-lb-card">
           <div class="widget-card-head">
             <div class="widget-icon-pill icon-cyan">🏆</div>
-            <div>
+            <div style="flex: 1; min-width: 0;">
               <h2>Local Mastery Leaderboard</h2>
               <p class="hint-sm">Your private offline ranking across subjects & milestone focus tiers.</p>
             </div>
+            <button class="glow-btn sm" id="btnOpenTop30Leaderboard" title="Open Global Top 30 Leaderboard" aria-label="Open Top 30 Leaderboard">
+              <span>🏆 Top 30 Ranks</span>
+            </button>
           </div>
 
           <div class="local-rank-banner">
@@ -568,7 +706,7 @@
           </div>
         </div>
 
-        <!-- Card 3: Feature Console (Audio, Rooms, Analytics, Journal, Badges) -->
+        <!-- Card 4: Feature Console (Audio, Rooms, Analytics, Journal, Badges) -->
         <div class="glass console-card">
           <!-- Console Tab Selector -->
           <nav class="side-tabs" role="tablist">
@@ -1200,6 +1338,55 @@
         <input type="range" id="setVolume" min="0" max="100" value="70" />
       </div>
       <button id="btnSaveSettings" class="ctrl-btn primary small">Save Configuration</button>
+    </div>
+  </div>
+
+  <!-- ══════════ Top 30 Focus Leaderboard Modal (#leaderboardModal) ══════════ -->
+  <div class="overlay" id="leaderboardModal" data-alias="top30LeaderboardOverlay" hidden>
+    <div class="glass modal top30-modal">
+      <div class="modal-head">
+        <div class="top30-head-title">
+          <div class="top30-trophy-pill">🏆</div>
+          <div>
+            <h2>Top 30 Focus Leaderboard</h2>
+            <p class="hint-sm">Live real-time student rankings by total verified focus hours</p>
+          </div>
+        </div>
+        <button class="icon-btn close-btn" id="btnCloseLeaderboardModal" data-close="leaderboardModal" aria-label="Close Leaderboard Modal">✕</button>
+      </div>
+
+      <!-- Scope Switcher: Weekly (7D) vs Monthly (30D) -->
+      <div class="top30-scope-header">
+        <div class="top30-scope-pills" role="tablist">
+          <button type="button" class="top30-scope-btn active" id="btnTop30ScopeWeek" data-scope="week" role="tab" aria-selected="true">
+            <span>📅 Weekly (7D)</span>
+          </button>
+          <button type="button" class="top30-scope-btn" id="btnTop30ScopeMonth" data-scope="month" role="tab" aria-selected="false">
+            <span>🗓️ Monthly (30D)</span>
+          </button>
+        </div>
+        <div class="top30-my-stat-chip" id="top30MyRankSummary">
+          <!-- Dynamically populated e.g. "Your Rank: #14 · 18.2h · 7🔥" -->
+        </div>
+      </div>
+
+      <!-- Top 3 Podium Highlights -->
+      <div class="top30-podium" id="top30Podium"></div>
+
+      <!-- Scrollable Leaderboard Table (Ranks 1 to 30) -->
+      <div class="top30-table-wrap">
+        <div class="top30-table-head-row">
+          <span class="col-rank">RANK</span>
+          <span class="col-user">STUDENT</span>
+          <span class="col-streak">STREAK</span>
+          <span class="col-time">FOCUS TIME</span>
+        </div>
+        <ul class="top30-rows-list" id="top30RowsList"></ul>
+      </div>
+
+      <div class="modal-foot top30-modal-foot">
+        <span class="hint-sm">⚡ Real study session hours automatically reflect in rankings. Keep focusing!</span>
+      </div>
     </div>
   </div>
 

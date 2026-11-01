@@ -17,7 +17,7 @@ const Store = (() => {
   const KEY = 'gt4s_v1';
   const defaults = {
     theme: 'dark',
-    settings: { focus: 25, short: 5, long: 15, custom: 45, rounds: 4, autoStart: false, chime: true, volume: 70, strictMode: false },
+    settings: { focus: 25, short: 5, long: 15, custom: 45, customBreak: 10, rounds: 4, autoStart: false, chime: true, volume: 70, strictMode: false },
     sessions: {},
     sessionsCount: {},
     profile: { nick: '', avatar: '🦉' },
@@ -32,6 +32,14 @@ const Store = (() => {
     journal: [],
     journalPin: '0000',
     strictInfractions: 0,
+    selectedSessionType: 'class',
+    breakdownPeriod: 'weekly',
+    customStudyMinutes: 45,
+    customBreakMinutes: 10,
+    activeTag: 'class',
+    aiScope: 'week',
+    tagBreakdown: { class: 0, revision: 0, test: 0 },
+    tagLogs: [],
   };
   let data = load();
 
@@ -39,7 +47,18 @@ const Store = (() => {
     try {
       const raw = localStorage.getItem(KEY);
       if (!raw) return structuredClone(defaults);
-      return { ...structuredClone(defaults), ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      const merged = { ...structuredClone(defaults), ...parsed };
+      merged.settings = { ...defaults.settings, ...(parsed.settings || {}) };
+      merged.customStudyMinutes = +(merged.customStudyMinutes || merged.settings.custom || 45);
+      merged.customBreakMinutes = +(merged.customBreakMinutes || merged.settings.customBreak || 10);
+      merged.settings.custom = merged.customStudyMinutes;
+      merged.settings.customBreak = merged.customBreakMinutes;
+      merged.selectedSessionType = merged.selectedSessionType || merged.activeTag || 'class';
+      merged.activeTag = merged.selectedSessionType;
+      merged.breakdownPeriod = merged.breakdownPeriod || (merged.aiScope === 'month' ? 'monthly' : 'weekly');
+      merged.aiScope = (merged.breakdownPeriod === 'monthly' ? 'month' : 'week');
+      return merged;
     } catch { return structuredClone(defaults); }
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {} }
@@ -50,14 +69,27 @@ const Store = (() => {
     todayKey() { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; },
     addFocus(sec) {
       const k = this.todayKey();
-      data.sessions[k] = (data.sessions[k] || 0) + sec / 60;
+      const mins = sec / 60;
+      data.sessions[k] = (data.sessions[k] || 0) + mins;
+      
+      // Track tag breakdown (Theory / Revision / Test)
+      const currentTag = data.selectedSessionType || data.activeTag || 'class';
+      data.tagBreakdown = data.tagBreakdown || { class: 0, revision: 0, test: 0 };
+      data.tagBreakdown[currentTag] = (data.tagBreakdown[currentTag] || 0) + mins;
+
+      // Track timestamped log for Weekly & Monthly AI period analytics
+      data.tagLogs = data.tagLogs || [];
+      data.tagLogs.push({ tag: currentTag, minutes: mins, timestamp: Date.now() });
+
       if (data.subject) {
-        const logEntry = { subject: data.subject, minutes: sec / 60, timestamp: Date.now() };
+        const logEntry = { subject: data.subject, tag: currentTag, minutes: mins, timestamp: Date.now() };
         data.subjectLogs[k] = data.subjectLogs[k] || [];
         data.subjectLogs[k].push(logEntry);
       }
       save();
       try { if (typeof SubjectLogger !== 'undefined' && SubjectLogger.render) SubjectLogger.render(); } catch {}
+      try { if (typeof AIStudyAnalytics !== 'undefined' && AIStudyAnalytics.render) AIStudyAnalytics.render(); } catch {}
+      try { if (typeof Top30Leaderboard !== 'undefined' && Top30Leaderboard.render) Top30Leaderboard.render(); } catch {}
     },
     addSessionCount() {
       const k = this.todayKey();
@@ -450,11 +482,12 @@ const Music = (() => {
    ════════════════════════════════════════════════════════════ */
 const Timer = (() => {
   const MODES = {
-    focus:     { label: 'Focus',       kind: 'focus' },
-    short:     { label: 'Short break', kind: 'break' },
-    long:      { label: 'Long break',  kind: 'break' },
-    custom:    { label: 'Custom',      kind: 'focus' },
-    stopwatch: { label: 'Stopwatch',   kind: 'stopwatch' },
+    focus:       { label: 'Focus',        kind: 'focus' },
+    short:       { label: 'Short break',  kind: 'break' },
+    long:        { label: 'Long break',   kind: 'break' },
+    custom:      { label: 'Custom',       kind: 'focus' },
+    customBreak: { label: 'Custom break', kind: 'break' },
+    stopwatch:   { label: 'Stopwatch',    kind: 'stopwatch' },
   };
   const RING = 779.1;
   let mode = 'focus', total = 0, left = 0, running = false, count = 0, last = 0, rafId = null;
@@ -465,8 +498,97 @@ const Timer = (() => {
   function durationFor(m) {
     if (m === 'stopwatch') return 0;
     const s = Store.d.settings;
+    if (m === 'customBreak') {
+      const bMins = (Store.d.customBreakMinutes !== undefined) ? Store.d.customBreakMinutes : (s.customBreak || 10);
+      const bSecs = Store.d.customBreakSeconds || 0;
+      return bMins * 60 + bSecs;
+    }
+    if (m === 'custom') {
+      const cMins = (Store.d.customStudyMinutes !== undefined) ? Store.d.customStudyMinutes : (s.custom || 45);
+      const cSecs = Store.d.customStudySeconds || 0;
+      return cMins * 60 + cSecs;
+    }
     return { focus: s.focus, short: s.short, long: s.long, custom: s.custom }[m] * 60;
   }
+  function renderCustomTab(activeTab) {
+    // 1. Locate the timer mode container for activeTab === 'custom'
+    const activeMode = activeTab;
+    const timerContainer = document.querySelector('.timer-card') || document.querySelector('.timer-mode-container') || document.querySelector('.timer-controls-wrap');
+    const circularDial = document.querySelector('.ring-wrap');
+    let ctrlEl = document.getElementById('customTimerControls');
+
+    // IF active tab is 'custom' (activeMode === 'custom'), SHOW #customTimerControls (remove 'hidden' class & set display: block)
+    if (activeMode === 'custom') {
+      if (timerContainer && circularDial) {
+        if (!ctrlEl) {
+          ctrlEl = document.createElement('div');
+          ctrlEl.id = 'customTimerControls';
+          ctrlEl.className = 'custom-setup-panel custom-timer-controls custom-timer-session-settings';
+          ctrlEl.setAttribute('data-component', 'custom-timer-settings');
+          timerContainer.insertBefore(ctrlEl, circularDial);
+        } else if (ctrlEl.parentNode !== timerContainer || ctrlEl.nextElementSibling !== circularDial) {
+          timerContainer.insertBefore(ctrlEl, circularDial);
+        }
+      }
+
+      if (ctrlEl) {
+        ctrlEl.classList.remove('hidden');
+        ctrlEl.classList.add('active');
+        ctrlEl.removeAttribute('hidden');
+        ctrlEl.style.display = 'block';
+      }
+
+      if (timerContainer) {
+        timerContainer.classList.add('mode-custom');
+        timerContainer.setAttribute('data-mode', 'custom');
+      }
+      document.body.classList.add('mode-custom');
+
+      // Update input fields & buttons to match store state
+      const inputCustomMin = document.getElementById('inputCustomMinutes') || document.getElementById('inputCustomDuration');
+      const inputCustomSec = document.getElementById('inputCustomSeconds');
+      const inputCustomBreak = document.getElementById('inputCustomBreakDuration');
+      const inputCustomBreakSec = document.getElementById('inputCustomBreakSeconds');
+
+      if (inputCustomMin) inputCustomMin.value = (Store.d.customStudyMinutes !== undefined) ? Store.d.customStudyMinutes : (Store.d.settings.custom || 45);
+      if (inputCustomSec) inputCustomSec.value = Store.d.customStudySeconds || 0;
+      if (inputCustomBreak) inputCustomBreak.value = (Store.d.customBreakMinutes !== undefined) ? Store.d.customBreakMinutes : (Store.d.settings.customBreak || 10);
+      if (inputCustomBreakSec) inputCustomBreakSec.value = Store.d.customBreakSeconds || 0;
+
+      const currentTag = Store.d.selectedSessionType || Store.d.activeTag || 'class';
+      const tagPills = document.querySelectorAll('#customTagPills .custom-tag-btn');
+      tagPills.forEach((p) => {
+        p.classList.toggle('active', p.dataset.tag === currentTag);
+      });
+
+      const currentPeriod = Store.d.breakdownPeriod || (Store.d.aiScope === 'month' ? 'monthly' : 'weekly');
+      const isMonth = (currentPeriod === 'monthly' || currentPeriod === 'month');
+      const btnWeek = document.getElementById('btnCustomScopeWeek');
+      const btnMonth = document.getElementById('btnCustomScopeMonth');
+      if (btnWeek) {
+        btnWeek.classList.toggle('active', !isMonth);
+        btnWeek.setAttribute('aria-selected', !isMonth ? 'true' : 'false');
+      }
+      if (btnMonth) {
+        btnMonth.classList.toggle('active', isMonth);
+        btnMonth.setAttribute('aria-selected', isMonth ? 'true' : 'false');
+      }
+    } else {
+      // IF active tab is NOT 'custom' ('focus', 'short', 'long', 'stopwatch'), IMMEDIATELY HIDE #customTimerControls (add 'hidden' class & set display: none).
+      if (ctrlEl) {
+        ctrlEl.classList.remove('active');
+        ctrlEl.classList.add('hidden');
+        ctrlEl.setAttribute('hidden', '');
+        ctrlEl.style.display = 'none';
+      }
+      if (timerContainer) {
+        timerContainer.classList.remove('mode-custom');
+        timerContainer.setAttribute('data-mode', activeTab);
+      }
+      document.body.classList.remove('mode-custom');
+    }
+  }
+
   function setMode(m, autostart = false) {
     mode = m;
     total = durationFor(m);
@@ -475,9 +597,29 @@ const Timer = (() => {
     if (btnText) btnText.innerHTML = '▶&nbsp; Start Focus';
     if (label) label.textContent = MODES[m].label;
 
-    // Show/hide custom timer controls
-    const ctrlEl = $('#customTimerControls');
-    if (ctrlEl) ctrlEl.hidden = (m !== 'custom');
+    // Strict conditional visibility for #customTimerControls
+    const activeMode = m;
+    const ctrlEl = document.getElementById('customTimerControls');
+    if (ctrlEl) {
+      if (activeMode === 'custom') {
+        ctrlEl.classList.remove('hidden');
+        ctrlEl.removeAttribute('hidden');
+        ctrlEl.style.display = 'block';
+      } else {
+        ctrlEl.classList.add('hidden');
+        ctrlEl.setAttribute('hidden', '');
+        ctrlEl.style.display = 'none';
+      }
+    }
+
+    renderCustomTab(m);
+
+    // Keep mode tabs strictly synchronized
+    $$('.mode-tab').forEach((t) => {
+      const tabMode = t.dataset.mode || t.dataset.tab;
+      const isMatch = (m === 'customBreak') ? (tabMode === 'custom') : (tabMode === m);
+      t.classList.toggle('active', isMatch);
+    });
 
     updateInfo(); paint(); stopLoop();
     if (autostart) start();
@@ -487,7 +629,15 @@ const Timer = (() => {
   function updateInfo() {
     if (!info) return;
     if (mode === 'stopwatch') { info.textContent = 'Counts up · space to toggle'; return; }
-    if (mode === 'custom') { info.textContent = `Custom · ${fmtMin(total / 60)} session`; return; }
+    if (mode === 'custom') {
+      const bMins = Store.d.settings.customBreak || 10;
+      info.textContent = `Custom Sprint · ${fmtMin(total / 60)} (Next: ${fmtMin(bMins)} break)`;
+      return;
+    }
+    if (mode === 'customBreak') {
+      info.textContent = `Custom Rest · ${fmtMin(total / 60)} break`;
+      return;
+    }
     const until = Store.d.settings.rounds - (count % Store.d.settings.rounds);
     info.textContent = `Session ${count + 1} · ${until} until long break`;
   }
@@ -537,7 +687,13 @@ const Timer = (() => {
       count++;
       const next = count % Store.d.settings.rounds === 0 ? 'long' : 'short';
       setMode(next, Store.d.settings.autoStart);
-    } else setMode('focus', Store.d.settings.autoStart);
+    } else if (mode === 'custom') {
+      setMode('customBreak', Store.d.settings.autoStart);
+    } else if (mode === 'customBreak') {
+      setMode('custom', Store.d.settings.autoStart);
+    } else {
+      setMode('focus', Store.d.settings.autoStart);
+    }
   }
   function complete() {
     running = false; stopLoop();
@@ -548,12 +704,13 @@ const Timer = (() => {
       if (mode === 'custom') Chime.customComplete(); else Chime.sessionEnd();
       toast(`${MODES[mode].label} complete! 🎉`, 'good');
       count++;
-      const next = mode === 'custom' ? 'custom' : (count % Store.d.settings.rounds === 0 ? 'long' : 'short');
+      const next = mode === 'custom' ? 'customBreak' : (count % Store.d.settings.rounds === 0 ? 'long' : 'short');
       setMode(next, Store.d.settings.autoStart);
     } else {
       Chime.breakEnd();
       toast('Break over — back to it! 💪');
-      setMode('focus', Store.d.settings.autoStart);
+      const next = mode === 'customBreak' ? 'custom' : 'focus';
+      setMode(next, Store.d.settings.autoStart);
     }
     StrictFocus.update();
   }
@@ -573,9 +730,28 @@ const Timer = (() => {
 
       // Mode tabs
       $$('.mode-tab').forEach((t) => t.addEventListener('click', () => {
+        const targetMode = t.dataset.mode || t.dataset.tab;
         $$('.mode-tab').forEach((x) => x.classList.remove('active'));
         t.classList.add('active');
-        setMode(t.dataset.mode);
+
+        // Strict conditional visibility for #customTimerControls:
+        // IF active tab is 'custom' (activeMode === 'custom'), SHOW #customTimerControls (remove 'hidden' class & set display: block).
+        // IF active tab is NOT 'custom' ('focus', 'short', 'long', 'stopwatch'), IMMEDIATELY HIDE #customTimerControls (add 'hidden' class & set display: none).
+        const activeMode = targetMode;
+        const ctrlEl = document.getElementById('customTimerControls');
+        if (ctrlEl) {
+          if (activeMode === 'custom') {
+            ctrlEl.classList.remove('hidden');
+            ctrlEl.removeAttribute('hidden');
+            ctrlEl.style.display = 'block';
+          } else {
+            ctrlEl.classList.add('hidden');
+            ctrlEl.setAttribute('hidden', '');
+            ctrlEl.style.display = 'none';
+          }
+        }
+
+        setMode(targetMode);
       }));
 
       // Timer controls
@@ -586,29 +762,139 @@ const Timer = (() => {
       if (btnReset) btnReset.addEventListener('click', reset);
       if (btnSkip) btnSkip.addEventListener('click', skip);
 
-      // Custom duration controls
+      // Custom duration & break controls
       const btnSetCustom = $('#btnSetCustomDuration');
-      const inputCustom = $('#inputCustomDuration');
-      if (inputCustom) inputCustom.value = Store.d.settings.custom;
+      const inputCustomMin = $('#inputCustomMinutes') || $('#inputCustomDuration');
+      const inputCustomSec = $('#inputCustomSeconds');
+      const inputCustomBreak = $('#inputCustomBreakDuration');
+      const inputCustomBreakSec = $('#inputCustomBreakSeconds');
 
-      function applyCustomDuration() {
-        if (!inputCustom) return;
-        const mins = +inputCustom.value;
-        if (mins > 0 && mins <= 480) {
+      if (inputCustomMin) inputCustomMin.value = (Store.d.customStudyMinutes !== undefined) ? Store.d.customStudyMinutes : (Store.d.settings.custom || 45);
+      if (inputCustomSec) inputCustomSec.value = Store.d.customStudySeconds || 0;
+      if (inputCustomBreak) inputCustomBreak.value = (Store.d.customBreakMinutes !== undefined) ? Store.d.customBreakMinutes : (Store.d.settings.customBreak || 10);
+      if (inputCustomBreakSec) inputCustomBreakSec.value = Store.d.customBreakSeconds || 0;
+
+      function updateStudyTimeDirectly() {
+        const mins = inputCustomMin ? Math.max(0, Math.min(720, parseInt(inputCustomMin.value, 10) || 0)) : 45;
+        const secs = inputCustomSec ? Math.max(0, Math.min(59, parseInt(inputCustomSec.value, 10) || 0)) : 0;
+        if (mins > 0 || secs > 0) {
+          Store.d.customStudyMinutes = mins;
+          Store.d.customStudySeconds = secs;
           Store.d.settings.custom = mins;
           Store.save();
-          if (mode === 'custom') setMode('custom');
-          toast(`Custom timer set to ${fmtMin(mins)}`, 'good');
-        } else {
-          toast('Enter 1–480 minutes', 'bad');
+          if (mode === 'custom') {
+            total = mins * 60 + secs;
+            if (!running) left = total;
+            paint();
+            updateInfo();
+          }
         }
       }
-      if (btnSetCustom) btnSetCustom.addEventListener('click', applyCustomDuration);
-      if (inputCustom) inputCustom.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyCustomDuration(); });
+
+      function updateBreakTimeDirectly() {
+        const breakMins = inputCustomBreak ? Math.max(1, Math.min(180, parseInt(inputCustomBreak.value, 10) || 10)) : 10;
+        const breakSecs = inputCustomBreakSec ? Math.max(0, Math.min(59, parseInt(inputCustomBreakSec.value, 10) || 0)) : 0;
+        Store.d.customBreakMinutes = breakMins;
+        Store.d.customBreakSeconds = breakSecs;
+        Store.d.settings.customBreak = breakMins;
+        Store.save();
+        if (mode === 'customBreak') {
+          total = breakMins * 60 + breakSecs;
+          if (!running) left = total;
+          paint();
+          updateInfo();
+        }
+      }
+
+      if (inputCustomMin) {
+        inputCustomMin.addEventListener('input', updateStudyTimeDirectly);
+        inputCustomMin.addEventListener('change', updateStudyTimeDirectly);
+      }
+      if (inputCustomSec) {
+        inputCustomSec.addEventListener('input', updateStudyTimeDirectly);
+        inputCustomSec.addEventListener('change', updateStudyTimeDirectly);
+      }
+      if (inputCustomBreak) {
+        inputCustomBreak.addEventListener('input', updateBreakTimeDirectly);
+        inputCustomBreak.addEventListener('change', updateBreakTimeDirectly);
+      }
+      if (inputCustomBreakSec) {
+        inputCustomBreakSec.addEventListener('input', updateBreakTimeDirectly);
+        inputCustomBreakSec.addEventListener('change', updateBreakTimeDirectly);
+      }
+
+      function applyCustomSettings() {
+        const mins = inputCustomMin ? Math.max(0, Math.min(720, parseInt(inputCustomMin.value, 10) || 0)) : 45;
+        const secs = inputCustomSec ? Math.max(0, Math.min(59, parseInt(inputCustomSec.value, 10) || 0)) : 0;
+        const breakMins = inputCustomBreak ? Math.max(1, Math.min(180, parseInt(inputCustomBreak.value, 10) || 10)) : 10;
+        const breakSecs = inputCustomBreakSec ? Math.max(0, Math.min(59, parseInt(inputCustomBreakSec.value, 10) || 0)) : 0;
+
+        if (mins === 0 && secs === 0) {
+          toast('Study duration must be at least 1 second', 'bad');
+          return;
+        }
+
+        Store.d.customStudyMinutes = mins;
+        Store.d.customStudySeconds = secs;
+        Store.d.customBreakMinutes = breakMins;
+        Store.d.customBreakSeconds = breakSecs;
+        Store.d.settings.custom = mins;
+        Store.d.settings.customBreak = breakMins;
+        Store.save();
+
+        if (mode === 'custom') {
+          total = mins * 60 + secs;
+          if (!running) left = total;
+          paint();
+          updateInfo();
+        } else if (mode === 'customBreak') {
+          total = breakMins * 60 + breakSecs;
+          if (!running) left = total;
+          paint();
+          updateInfo();
+        }
+        const tagLabels = { revision: 'Revision', test: 'Test', class: 'Theory Class' };
+        const curTag = Store.d.selectedSessionType || Store.d.activeTag || 'class';
+        toast(`Custom Settings Applied: ${mins}m ${secs}s sprint · ${breakMins}m break (${tagLabels[curTag] || curTag})`, 'good');
+        if (mode === 'custom' || mode === 'customBreak') {
+          try { if (typeof AIStudyAnalytics !== 'undefined' && AIStudyAnalytics.render) AIStudyAnalytics.render(); } catch {}
+        }
+      }
+      if (btnSetCustom) btnSetCustom.addEventListener('click', applyCustomSettings);
+      if (inputCustomMin) inputCustomMin.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyCustomSettings(); });
+      if (inputCustomSec) inputCustomSec.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyCustomSettings(); });
+      if (inputCustomBreak) inputCustomBreak.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyCustomSettings(); });
+      if (inputCustomBreakSec) inputCustomBreakSec.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyCustomSettings(); });
+
+      // Interactive category selection pills: 'Revision', 'Test', and 'Theory Class'
+      const customPills = $$('#customTagPills .custom-tag-btn');
+      if (customPills.length) {
+        const curTag = Store.d.selectedSessionType || Store.d.activeTag || 'class';
+        customPills.forEach((p) => {
+          p.classList.toggle('active', p.dataset.tag === curTag);
+          p.addEventListener('click', () => {
+            const tag = p.dataset.tag;
+            Store.d.selectedSessionType = tag;
+            Store.d.activeTag = tag;
+            Store.save();
+            customPills.forEach((x) => x.classList.toggle('active', x.dataset.tag === tag));
+            const tagLabels = { revision: 'Revision', test: 'Test', class: 'Theory Class' };
+            toast(`Category: ${tagLabels[tag] || tag}`, 'good');
+            if (mode === 'custom' || mode === 'customBreak') {
+              updateInfo();
+              try { if (typeof AIStudyAnalytics !== 'undefined' && AIStudyAnalytics.render) AIStudyAnalytics.render(); } catch {}
+            }
+          });
+        });
+      }
 
       setMode('focus'); paint();
     },
-    setMode, reset, skip, pause,
+    get activeTab() { return mode; },
+    set activeTab(val) { setMode(val); },
+    getActiveTab() { return mode; },
+    getMode() { return mode; },
+    setMode, reset, skip, pause, start, applyCustomSettings, renderCustomTab,
   };
 })();
 
@@ -2070,8 +2356,36 @@ const SubjectLogger = (() => {
       if (btnLog) {
         btnLog.addEventListener('click', () => {
           renderLog();
-          const overlay = $('#subjectLogOverlay');
-          if (overlay) overlay.hidden = false;
+          const overlayEl = $('#subjectLogOverlay');
+          if (overlayEl) {
+            overlayEl.hidden = false;
+            overlayEl.removeAttribute('hidden');
+            overlayEl.style.display = 'grid';
+          }
+        });
+      }
+
+      const closeLogBtn = document.querySelector('[data-close="subjectLogOverlay"]');
+      if (closeLogBtn) {
+        closeLogBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const overlayEl = $('#subjectLogOverlay');
+          if (overlayEl) {
+            overlayEl.hidden = true;
+            overlayEl.setAttribute('hidden', '');
+            overlayEl.style.display = 'none';
+          }
+        });
+      }
+
+      const subjectLogOverlay = $('#subjectLogOverlay');
+      if (subjectLogOverlay) {
+        subjectLogOverlay.addEventListener('click', (e) => {
+          if (e.target === subjectLogOverlay) {
+            subjectLogOverlay.hidden = true;
+            subjectLogOverlay.setAttribute('hidden', '');
+            subjectLogOverlay.style.display = 'none';
+          }
         });
       }
 
@@ -2096,17 +2410,54 @@ const UI = (() => {
 
   function overlay(id, show) {
     const el = $('#' + id);
-    if (el) el.hidden = !show;
+    if (el) {
+      el.hidden = !show;
+      if (show) el.removeAttribute('hidden');
+      else el.setAttribute('hidden', '');
+      el.style.display = show ? 'grid' : 'none';
+    }
+    if (id === 'leaderboardModal' || id === 'top30LeaderboardOverlay') {
+      const alias = (id === 'leaderboardModal') ? $('#top30LeaderboardOverlay') : $('#leaderboardModal');
+      if (alias) {
+        alias.hidden = !show;
+        if (show) alias.removeAttribute('hidden');
+        else alias.setAttribute('hidden', '');
+        alias.style.display = show ? 'grid' : 'none';
+      }
+    }
   }
 
   function applyTheme(t) {
-    document.documentElement.dataset.theme = t;
+    const isLight = (t === 'light' || t === 'light-mode');
+    const theme = isLight ? 'light' : 'dark';
+
+    if (isLight) {
+      document.body.classList.add('light-mode');
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-mode');
+      document.body.classList.remove('light-theme');
+    }
+    document.documentElement.dataset.theme = theme;
+
+    try {
+      localStorage.setItem('themePreference', theme);
+      localStorage.setItem('theme', theme);
+    } catch {}
+    Store.d.theme = theme;
+    Store.save();
+
+    const headerIcon = $('#headerThemeToggleIcon');
+    const headerBtn = document.getElementById('themeToggleBtn') || $('#btnHeaderThemeToggle');
+    if (headerIcon) headerIcon.textContent = isLight ? '🌙' : '☀️';
+    if (headerBtn) headerBtn.setAttribute('title', isLight ? 'Switch to Dark Mode (🌙)' : 'Switch to Light Mode (☀️)');
+
     const btn = $('#btnTheme');
-    if (btn) btn.textContent = THEME_ICONS[t] || '🌙';
+    if (btn) btn.innerHTML = `<span>${isLight ? '🌙' : '☀️'}</span><small class="btn-caption">Theme</small>`;
     const btnSidebarTheme = $('#btnSidebarTheme');
-    if (btnSidebarTheme) btnSidebarTheme.textContent = `${THEME_ICONS[t] || '🌙'} Theme`;
-    Store.d.theme = t; Store.save();
-    if (typeof Chart !== 'undefined') Stats.draw();
+    if (btnSidebarTheme) btnSidebarTheme.innerHTML = `<span class="sq-icon">${isLight ? '🌙' : '☀️'}</span><span class="sq-label">Theme</span>`;
+
+    if (typeof Chart !== 'undefined' && typeof Stats !== 'undefined' && Stats.draw) Stats.draw();
   }
 
   function syncSoundUI() {
@@ -2206,17 +2557,30 @@ const UI = (() => {
 
   return {
     init() {
-      // theme
-      applyTheme(Store.d.theme || 'dark');
-      const btnTheme = $('#btnTheme');
-      const btnSidebarTheme = $('#btnSidebarTheme');
-      function cycleTheme() {
-        const cur = document.documentElement.dataset.theme;
-        const idx = THEMES.indexOf(cur);
-        applyTheme(THEMES[(idx + 1) % THEMES.length]);
+      // Theme preference in LocalStorage (theme / themePreference)
+      let initialTheme = 'dark';
+      try {
+        initialTheme = localStorage.getItem('theme') || localStorage.getItem('themePreference') || Store.d.theme || 'dark';
+      } catch {
+        initialTheme = Store.d.theme || 'dark';
       }
-      if (btnTheme) btnTheme.addEventListener('click', cycleTheme);
-      if (btnSidebarTheme) btnSidebarTheme.addEventListener('click', cycleTheme);
+      applyTheme(initialTheme);
+
+      // Explicit addEventListener('click') on #themeToggleBtn
+      const themeToggleBtn = document.getElementById('themeToggleBtn') || document.getElementById('btnHeaderThemeToggle');
+      if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+          const isCurrentLight = document.documentElement.dataset.theme === 'light' || document.body.classList.contains('light-mode');
+          const nextTheme = isCurrentLight ? 'dark' : 'light';
+          applyTheme(nextTheme);
+          toast(`Switched to ${nextTheme === 'light' ? 'Light (Day) ☀️' : 'Dark (Night) 🌙'} Mode`, 'good');
+        });
+      }
+
+      const btnTheme = $('#btnTheme');
+      if (btnTheme) btnTheme.onclick = (e) => { e.preventDefault(); if (themeToggleBtn) themeToggleBtn.click(); };
+      const btnSidebarTheme = $('#btnSidebarTheme');
+      if (btnSidebarTheme) btnSidebarTheme.onclick = (e) => { e.preventDefault(); if (themeToggleBtn) themeToggleBtn.click(); };
 
       // sound & chime sync
       syncSoundUI();
@@ -2326,6 +2690,21 @@ const UI = (() => {
             case 'profile':
               openProfileModal();
               break;
+            case 'top30-leaderboard':
+            case 'leaderboard':
+              closeSidebar();
+              if (typeof Top30Leaderboard !== 'undefined' && Top30Leaderboard.open) {
+                Top30Leaderboard.open();
+              } else {
+                const modal = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
+                if (modal) {
+                  modal.classList.remove('hidden');
+                  modal.removeAttribute('hidden');
+                  modal.hidden = false;
+                  modal.style.display = 'flex';
+                }
+              }
+              break;
             case 'settings':
               loadSettings();
               overlay('settingsOverlay', true);
@@ -2333,6 +2712,39 @@ const UI = (() => {
           }
         });
       });
+
+      // Direct addEventListener('click') on the "Top 30 Focus Leaderboard" menu item inside the drawer menu
+      const btnTop30Drawer = document.getElementById('btnSidebarTop30Leaderboard') 
+        || document.querySelector('[data-nav="top30-leaderboard"]')
+        || Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.textContent.includes('Top 30 Focus Leaderboard'));
+
+      if (btnTop30Drawer) {
+        btnTop30Drawer.addEventListener('click', (e) => {
+          e.preventDefault();
+          closeSidebar();
+          if (typeof Top30Leaderboard !== 'undefined' && Top30Leaderboard.open) {
+            Top30Leaderboard.open();
+          } else {
+            const modal = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
+            if (modal) {
+              modal.classList.remove('hidden');
+              modal.removeAttribute('hidden');
+              modal.hidden = false;
+              modal.style.display = 'grid';
+            }
+          }
+        });
+      }
+
+      const btnOpenTop30Leaderboard = $('#btnOpenTop30Leaderboard');
+      if (btnOpenTop30Leaderboard) {
+        btnOpenTop30Leaderboard.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (typeof Top30Leaderboard !== 'undefined' && Top30Leaderboard.open) {
+            Top30Leaderboard.open();
+          }
+        });
+      }
 
       // local profile modal handling
       const btnSaveProfile = $('#btnSaveProfile');
@@ -2722,6 +3134,522 @@ const LocalLeaderboard = (() => {
 })();
 
 /* ════════════════════════════════════════════════════════════
+   SMART AI STUDY ANALYTICS & SESSION TAGGING
+   ════════════════════════════════════════════════════════════ */
+const AIStudyAnalytics = (() => {
+  const TAG_NAMES = {
+    class: 'Theory / Class',
+    revision: 'Revision',
+    test: 'Practice / Test',
+  };
+
+  const IDEAL_RATIOS = {
+    class: 40,
+    revision: 35,
+    test: 25,
+  };
+
+  let activePeriod = Store.d.breakdownPeriod || (Store.d.aiScope === 'month' ? 'monthly' : 'weekly'); // 'weekly' | 'monthly'
+
+  function initTagPills() {
+    const pills = $$('#customTagPills .custom-tag-btn');
+    if (!pills.length) return;
+
+    const currentTag = Store.d.selectedSessionType || Store.d.activeTag || 'class';
+    pills.forEach((p) => {
+      p.classList.toggle('active', p.dataset.tag === currentTag);
+    });
+  }
+
+  function initScopeTabs() {
+    const btnWeek = $('#btnCustomScopeWeek');
+    const btnMonth = $('#btnCustomScopeMonth');
+    if (btnWeek) {
+      btnWeek.addEventListener('click', () => {
+        activePeriod = 'weekly';
+        Store.d.breakdownPeriod = 'weekly';
+        Store.d.aiScope = 'week';
+        Store.save();
+        btnWeek.classList.add('active');
+        btnWeek.setAttribute('aria-selected', 'true');
+        btnMonth?.classList.remove('active');
+        btnMonth?.setAttribute('aria-selected', 'false');
+        toast('Time Breakdown: Weekly (7 Days)', 'good');
+        render();
+      });
+    }
+    if (btnMonth) {
+      btnMonth.addEventListener('click', () => {
+        activePeriod = 'monthly';
+        Store.d.breakdownPeriod = 'monthly';
+        Store.d.aiScope = 'month';
+        Store.save();
+        btnMonth.classList.add('active');
+        btnMonth.setAttribute('aria-selected', 'true');
+        btnWeek?.classList.remove('active');
+        btnWeek?.setAttribute('aria-selected', 'false');
+        toast('Time Breakdown: Monthly (30 Days)', 'good');
+        render();
+      });
+    }
+  }
+
+  function calculatePeriodData() {
+    const logs = Array.isArray(Store.d.tagLogs) ? Store.d.tagLogs : [];
+    const now = Date.now();
+    const isMonthly = (activePeriod === 'monthly' || activePeriod === 'month');
+    const windowMs = isMonthly ? 30 * 86400 * 1000 : 7 * 86400 * 1000;
+
+    let classMins = 0;
+    let revisionMins = 0;
+    let testMins = 0;
+
+    const filtered = logs.filter((entry) => entry && entry.timestamp && (now - entry.timestamp) <= windowMs);
+
+    if (filtered.length > 0) {
+      filtered.forEach((e) => {
+        const m = Math.max(0, +e.minutes || 0);
+        if (e.tag === 'revision') revisionMins += m;
+        else if (e.tag === 'test') testMins += m;
+        else classMins += m;
+      });
+    } else {
+      // Fallback to cumulative tagBreakdown if no timestamped logs exist yet
+      const raw = Store.d.tagBreakdown || { class: 0, revision: 0, test: 0 };
+      classMins = Math.max(0, +raw.class || 0);
+      revisionMins = Math.max(0, +raw.revision || 0);
+      testMins = Math.max(0, +raw.test || 0);
+    }
+
+    classMins = Math.round(classMins);
+    revisionMins = Math.round(revisionMins);
+    testMins = Math.round(testMins);
+    const totalMins = classMins + revisionMins + testMins;
+
+    let pctClass = 0, pctRev = 0, pctTest = 0;
+    if (totalMins > 0) {
+      pctClass = Math.round((classMins / totalMins) * 100);
+      pctRev = Math.round((revisionMins / totalMins) * 100);
+      pctTest = Math.max(0, 100 - pctClass - pctRev);
+    }
+
+    return {
+      classMins,
+      revisionMins,
+      testMins,
+      totalMins,
+      pctClass,
+      pctRev,
+      pctTest,
+      deltaClass: pctClass - IDEAL_RATIOS.class,
+      deltaRev: pctRev - IDEAL_RATIOS.revision,
+      deltaTest: pctTest - IDEAL_RATIOS.test,
+    };
+  }
+
+  function getInsight(stats) {
+    const { totalMins, classMins, revisionMins, testMins } = stats;
+    const totalHoursNum = +(totalMins / 60).toFixed(1);
+    const classHoursNum = +(classMins / 60).toFixed(1);
+    const revHoursNum = +(revisionMins / 60).toFixed(1);
+    const testHoursNum = +(testMins / 60).toFixed(1);
+
+    const isMonthly = (activePeriod === 'monthly' || activePeriod === 'month');
+    const periodLabel = isMonthly ? 'this month' : 'this week';
+
+    if (totalMins <= 0 || totalHoursNum <= 0) {
+      return {
+        icon: '💡',
+        text: `💡 AI Insight: You have logged 0.0 Hours total ${periodLabel}. Start a focus sprint to establish cognitive momentum.`,
+      };
+    }
+
+    // Golden 40% Theory / 35% Revision / 25% Practice distribution
+    const idealRevHours = +(totalHoursNum * 0.35).toFixed(1);
+    const idealTestHours = +(totalHoursNum * 0.25).toFixed(1);
+    const idealClassHours = +(totalHoursNum * 0.40).toFixed(1);
+
+    const revDiff = +(idealRevHours - revHoursNum).toFixed(1);
+    const testDiff = +(idealTestHours - testHoursNum).toFixed(1);
+    const classDiff = +(idealClassHours - classHoursNum).toFixed(1);
+
+    // If within 0.3h of golden ratio
+    if (Math.abs(revDiff) <= 0.3 && Math.abs(testDiff) <= 0.3 && Math.abs(classDiff) <= 0.3) {
+      return {
+        icon: '🎯',
+        text: `🎯 AI Insight: You have logged ${totalHoursNum.toFixed(1)} Hours total ${periodLabel}. Perfect 40/35/25 cognitive balance maintained!`,
+      };
+    }
+
+    if (revDiff >= 0.4) {
+      return {
+        icon: '💡',
+        text: `💡 AI Insight: You have logged ${totalHoursNum.toFixed(1)} Hours total ${periodLabel}. Increase Revision hours by ${revDiff}h to hit ideal balance.`,
+      };
+    }
+
+    if (testDiff >= 0.4) {
+      return {
+        icon: '💡',
+        text: `💡 AI Insight: You have logged ${totalHoursNum.toFixed(1)} Hours total ${periodLabel}. Increase Practice / Test hours by ${testDiff}h to hit ideal balance.`,
+      };
+    }
+
+    if (classDiff >= 0.4) {
+      return {
+        icon: '💡',
+        text: `💡 AI Insight: You have logged ${totalHoursNum.toFixed(1)} Hours total ${periodLabel}. Increase Theory hours by ${classDiff}h to hit ideal balance.`,
+      };
+    }
+
+    if (classHoursNum > idealClassHours + 0.5) {
+      const surplus = +(classHoursNum - idealClassHours).toFixed(1);
+      return {
+        icon: '💡',
+        text: `💡 AI Insight: You have logged ${totalHoursNum.toFixed(1)} Hours total ${periodLabel}. Theory is ahead by ${surplus}h — shift next session to Revision.`,
+      };
+    }
+
+    return {
+      icon: '💡',
+      text: `💡 AI Insight: You have logged ${totalHoursNum.toFixed(1)} Hours total ${periodLabel}. Aim for 40% Theory · 35% Revision · 25% Practice.`,
+    };
+  }
+
+  function render() {
+    const stats = calculatePeriodData();
+
+    // Format strictly in HOURS (e.g., "Theory: 4.5 Hours")
+    const classHours = (stats.classMins / 60).toFixed(1);
+    const revHours = (stats.revisionMins / 60).toFixed(1);
+    const testHours = (stats.testMins / 60).toFixed(1);
+    const totalHours = (stats.totalMins / 60).toFixed(1);
+
+    const valClass = $('#aiValClass');
+    const valRev = $('#aiValRevision');
+    const valTest = $('#aiValTest');
+    const barClass = $('#aiBarClass');
+    const barRev = $('#aiBarRevision');
+    const barTest = $('#aiBarTest');
+    const totalLabel = $('#aiTotalFocusTag');
+    const insightText = $('#aiInsightText');
+    const insightIcon = $('#aiInsightIcon');
+
+    if (valClass) valClass.textContent = `Theory: ${classHours} Hours`;
+    if (valRev) valRev.textContent = `Revision: ${revHours} Hours`;
+    if (valTest) valTest.textContent = `Practice / Test: ${testHours} Hours`;
+
+    if (barClass) barClass.style.width = `${stats.pctClass}%`;
+    if (barRev) barRev.style.width = `${stats.pctRev}%`;
+    if (barTest) barTest.style.width = `${stats.pctTest}%`;
+
+    const isMonthly = (activePeriod === 'monthly' || activePeriod === 'month');
+
+    if (totalLabel) {
+      const periodTitle = isMonthly ? '30 Days' : '7 Days';
+      totalLabel.textContent = `Total: ${totalHours} Hours (${periodTitle})`;
+    }
+
+    const scopeChip = $('#aiScopeStatusChip');
+    if (scopeChip) {
+      scopeChip.textContent = isMonthly ? '🗓️ 30D MONTHLY' : '📅 7D WEEKLY';
+    }
+
+    const insight = getInsight(stats);
+    if (insightText) insightText.textContent = insight.text;
+    if (insightIcon) insightIcon.textContent = insight.icon;
+
+    // Keep active pill state in sync inside Custom dock
+    const currentTag = Store.d.selectedSessionType || Store.d.activeTag || 'class';
+    $$('#customTagPills .custom-tag-btn').forEach((p) => {
+      p.classList.toggle('active', p.dataset.tag === currentTag);
+    });
+
+    // Keep custom AI scope toggle buttons in sync
+    const isWeek = !isMonthly;
+    const btnWeek = $('#btnCustomScopeWeek');
+    const btnMonth = $('#btnCustomScopeMonth');
+    if (btnWeek) {
+      btnWeek.classList.toggle('active', isWeek);
+      btnWeek.setAttribute('aria-selected', isWeek ? 'true' : 'false');
+    }
+    if (btnMonth) {
+      btnMonth.classList.toggle('active', !isWeek);
+      btnMonth.setAttribute('aria-selected', !isWeek ? 'true' : 'false');
+    }
+  }
+
+  return {
+    init() {
+      initTagPills();
+      initScopeTabs();
+      render();
+    },
+    render,
+    setPeriod(p) {
+      if (p === 'weekly' || p === 'monthly' || p === 'week' || p === 'month') {
+        activePeriod = (p === 'month' || p === 'monthly') ? 'monthly' : 'weekly';
+        Store.d.breakdownPeriod = activePeriod;
+        Store.d.aiScope = (activePeriod === 'monthly' ? 'month' : 'week');
+        Store.save();
+        render();
+      }
+    },
+  };
+})();
+
+/* ════════════════════════════════════════════════════════════
+   14. TOP 30 FOCUS LEADERBOARD MODAL
+   ════════════════════════════════════════════════════════════ */
+const Top30Leaderboard = (() => {
+  let activeScope = 'week'; // 'week' or 'month'
+
+  const PEER_STUDENTS = [
+    { nick: 'Aarav Sharma', avatar: '👨‍🎓', weekBase: 38.5, monthBase: 154.0, streak: 28 },
+    { nick: 'Elena Rostova', avatar: '👩‍💻', weekBase: 35.2, monthBase: 141.5, streak: 21 },
+    { nick: 'Liam Chen', avatar: '⚡', weekBase: 33.8, monthBase: 135.0, streak: 26 },
+    { nick: 'Sophia Patel', avatar: '📚', weekBase: 31.4, monthBase: 126.0, streak: 19 },
+    { nick: 'Kenji Takahashi', avatar: '🎯', weekBase: 29.6, monthBase: 118.5, streak: 17 },
+    { nick: 'Maya Lin', avatar: '🌸', weekBase: 28.0, monthBase: 112.0, streak: 23 },
+    { nick: 'Marcus Thorne', avatar: '☕', weekBase: 26.5, monthBase: 106.0, streak: 15 },
+    { nick: 'Ananya Roy', avatar: '🎨', weekBase: 25.1, monthBase: 100.5, streak: 14 },
+    { nick: 'Lucas Dubois', avatar: '🚀', weekBase: 23.8, monthBase: 95.2, streak: 18 },
+    { nick: 'Zara Al-Mansoor', avatar: '✨', weekBase: 22.4, monthBase: 89.6, streak: 12 },
+    { nick: 'Devon Vance', avatar: '🎧', weekBase: 21.0, monthBase: 84.0, streak: 16 },
+    { nick: 'Chiara Rossi', avatar: '🌿', weekBase: 19.5, monthBase: 78.0, streak: 11 },
+    { nick: 'Ethan Walker', avatar: '🔥', weekBase: 18.2, monthBase: 72.8, streak: 13 },
+    { nick: 'Priya Nair', avatar: '🪐', weekBase: 17.0, monthBase: 68.0, streak: 10 },
+    { nick: 'Mateo Hernandez', avatar: '💻', weekBase: 15.8, monthBase: 63.2, streak: 9 },
+    { nick: 'Chloe Dupont', avatar: '📖', weekBase: 14.5, monthBase: 58.0, streak: 14 },
+    { nick: 'Rohan Mehra', avatar: '🧠', weekBase: 13.2, monthBase: 52.8, streak: 8 },
+    { nick: 'Emma Watson', avatar: '🕊️', weekBase: 12.0, monthBase: 48.0, streak: 7 },
+    { nick: 'Hiroshi Sato', avatar: '🏹', weekBase: 11.1, monthBase: 44.4, streak: 6 },
+    { nick: 'Ingrid Berg', avatar: '❄️', weekBase: 10.0, monthBase: 40.0, streak: 9 },
+    { nick: 'Noah Becker', avatar: '⚙️', weekBase: 9.2, monthBase: 36.8, streak: 5 },
+    { nick: 'Fatima Zahra', avatar: '🌙', weekBase: 8.4, monthBase: 33.6, streak: 6 },
+    { nick: 'Gabriel Silva', avatar: '🌊', weekBase: 7.5, monthBase: 30.0, streak: 4 },
+    { nick: 'Sunita Rao', avatar: '⭐', weekBase: 6.8, monthBase: 27.2, streak: 5 },
+    { nick: 'Felix Müller', avatar: '🦊', weekBase: 6.0, monthBase: 24.0, streak: 3 },
+    { nick: 'Hanna Lindqvist', avatar: '🌲', weekBase: 5.2, monthBase: 20.8, streak: 4 },
+    { nick: 'Tariq Aziz', avatar: '🦅', weekBase: 4.5, monthBase: 18.0, streak: 3 },
+    { nick: 'Mei-Ling Wang', avatar: '🎋', weekBase: 3.8, monthBase: 15.2, streak: 2 },
+    { nick: 'Oliver Smith', avatar: '🧭', weekBase: 3.1, monthBase: 12.4, streak: 2 },
+  ];
+
+  function getCombinedList() {
+    const profile = Store.d.profile || { nick: 'You', avatar: '🦉' };
+    const userNick = (profile.nick && profile.nick.trim()) ? profile.nick.trim() : 'You';
+    const userAvatar = profile.avatar || '🦉';
+
+    const weekMinutes = (typeof Stats !== 'undefined' && Stats.totals) ? (Stats.totals().week || 0) : 0;
+    const monthMinutes = (typeof Stats !== 'undefined' && Stats.totals) ? (Stats.totals().month || 0) : 0;
+    const streakDays = (typeof Stats !== 'undefined' && Stats.streak) ? (Stats.streak() || 1) : 1;
+
+    const userEntry = {
+      isMe: true,
+      nick: userNick,
+      avatar: userAvatar,
+      weekHours: weekMinutes / 60,
+      monthHours: monthMinutes / 60,
+      streak: Math.max(streakDays, 1),
+    };
+
+    const allEntries = PEER_STUDENTS.map((p) => ({
+      isMe: false,
+      nick: p.nick,
+      avatar: p.avatar,
+      weekHours: p.weekBase,
+      monthHours: p.monthBase,
+      streak: p.streak,
+    }));
+
+    allEntries.push(userEntry);
+
+    const ranked = allEntries.map((item) => {
+      const hours = (activeScope === 'month') ? item.monthHours : item.weekHours;
+      return {
+        ...item,
+        hours: Math.max(0, hours),
+      };
+    }).sort((a, b) => b.hours - a.hours);
+
+    return ranked.slice(0, 30);
+  }
+
+  function render() {
+    const listEl = $('#top30RowsList');
+    const podiumEl = $('#top30Podium');
+    const mySummaryEl = $('#top30MyRankSummary');
+    if (!listEl) return;
+
+    const ranked = getCombinedList();
+    const myRankIdx = ranked.findIndex((r) => r.isMe);
+    const myRank = myRankIdx >= 0 ? (myRankIdx + 1) : '>30';
+    const myItem = myRankIdx >= 0 ? ranked[myRankIdx] : null;
+    const myHours = myItem ? myItem.hours : 0;
+    const myStreak = myItem ? myItem.streak : 1;
+
+    if (mySummaryEl) {
+      mySummaryEl.innerHTML = `
+        <span class="my-rank-badge">Your Rank: <b>#${myRank}</b></span>
+        <span>·</span>
+        <span class="my-rank-stat">${myHours.toFixed(1)}h Focus</span>
+        <span>·</span>
+        <span class="my-rank-streak">${myStreak}🔥 Streak</span>
+      `;
+    }
+
+    if (podiumEl && ranked.length >= 3) {
+      const top1 = ranked[0];
+      const top2 = ranked[1];
+      const top3 = ranked[2];
+
+      podiumEl.innerHTML = `
+        <div class="podium-col ${top2.isMe ? 'is-me' : ''}">
+          <div class="podium-avatar">${esc(top2.avatar)}</div>
+          <span class="podium-badge badge-silver">#2 SILVER</span>
+          <span class="podium-nick">${esc(top2.nick)}${top2.isMe ? '<span class="me-chip">YOU</span>' : ''}</span>
+          <span class="podium-hours">${top2.hours.toFixed(1)}h</span>
+          <span class="podium-streak">${top2.streak}🔥</span>
+          <div class="podium-pillar pillar-2"></div>
+        </div>
+
+        <div class="podium-col ${top1.isMe ? 'is-me' : ''}">
+          <div class="podium-crown">👑</div>
+          <div class="podium-avatar">${esc(top1.avatar)}</div>
+          <span class="podium-badge badge-gold">#1 GOLD</span>
+          <span class="podium-nick">${esc(top1.nick)}${top1.isMe ? '<span class="me-chip">YOU</span>' : ''}</span>
+          <span class="podium-hours">${top1.hours.toFixed(1)}h</span>
+          <span class="podium-streak">${top1.streak}🔥</span>
+          <div class="podium-pillar pillar-1"></div>
+        </div>
+
+        <div class="podium-col ${top3.isMe ? 'is-me' : ''}">
+          <div class="podium-avatar">${esc(top3.avatar)}</div>
+          <span class="podium-badge badge-bronze">#3 BRONZE</span>
+          <span class="podium-nick">${esc(top3.nick)}${top3.isMe ? '<span class="me-chip">YOU</span>' : ''}</span>
+          <span class="podium-hours">${top3.hours.toFixed(1)}h</span>
+          <span class="podium-streak">${top3.streak}🔥</span>
+          <div class="podium-pillar pillar-3"></div>
+        </div>
+      `;
+    }
+
+    listEl.innerHTML = ranked.map((student, idx) => {
+      const rank = idx + 1;
+      let badgeClass = 'rank-badge-normal';
+      if (rank === 1) badgeClass = 'rank-badge-gold';
+      else if (rank === 2) badgeClass = 'rank-badge-silver';
+      else if (rank === 3) badgeClass = 'rank-badge-bronze';
+
+      return `
+        <li class="top30-row ${student.isMe ? 'is-me' : ''}">
+          <span class="col-rank">
+            <span class="rank-badge ${badgeClass}">#${rank}</span>
+          </span>
+          <span class="col-user">
+            <span class="top30-avatar">${esc(student.avatar)}</span>
+            <span class="top30-nick" title="${esc(student.nick)}">${esc(student.nick)}</span>
+            ${student.isMe ? '<span class="me-tag">YOU</span>' : ''}
+          </span>
+          <span class="col-streak">
+            <span class="top30-streak-pill">${student.streak}🔥</span>
+          </span>
+          <span class="col-time">
+            <span class="top30-time-val">${student.hours.toFixed(1)}h</span>
+          </span>
+        </li>
+      `;
+    }).join('');
+  }
+
+  function setScope(scope) {
+    activeScope = (scope === 'month') ? 'month' : 'week';
+    const btnWeek = $('#btnTop30ScopeWeek');
+    const btnMonth = $('#btnTop30ScopeMonth');
+    const isWeek = activeScope === 'week';
+
+    if (btnWeek) {
+      btnWeek.classList.toggle('active', isWeek);
+      btnWeek.setAttribute('aria-selected', isWeek ? 'true' : 'false');
+    }
+    if (btnMonth) {
+      btnMonth.classList.toggle('active', !isWeek);
+      btnMonth.setAttribute('aria-selected', !isWeek ? 'true' : 'false');
+    }
+    render();
+  }
+
+  function open() {
+    render();
+    const modal = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.removeAttribute('hidden');
+      modal.hidden = false;
+      modal.style.display = 'grid';
+      setTimeout(() => {
+        const myRow = modal.querySelector('.top30-row.is-me');
+        if (myRow) myRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 80);
+    }
+  }
+
+  function close() {
+    const modal = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.setAttribute('hidden', 'true');
+      modal.hidden = true;
+      modal.style.display = 'none';
+    }
+  }
+
+  function init() {
+    const btnWeek = $('#btnTop30ScopeWeek');
+    const btnMonth = $('#btnTop30ScopeMonth');
+    if (btnWeek) btnWeek.addEventListener('click', () => setScope('week'));
+    if (btnMonth) btnMonth.addEventListener('click', () => setScope('month'));
+
+    // Working close button (X)
+    const closeBtns = document.querySelectorAll('#btnCloseLeaderboardModal, [data-close="leaderboardModal"], [data-close="top30LeaderboardOverlay"]');
+    closeBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        close();
+      });
+    });
+
+    // Direct binding for the drawer item link and dashboard card buttons
+    const triggerBtns = document.querySelectorAll('#btnSidebarTop30Leaderboard, #btnOpenTop30Leaderboard, [data-nav="top30-leaderboard"], [data-modal="leaderboardModal"]');
+    triggerBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (typeof closeSidebar === 'function') closeSidebar();
+        open();
+      });
+    });
+
+    const overlayEl = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
+    if (overlayEl) {
+      overlayEl.addEventListener('click', (e) => {
+        if (e.target === overlayEl) close();
+      });
+    }
+
+    render();
+  }
+
+  return {
+    init,
+    render,
+    open,
+    close,
+    setScope,
+  };
+})();
+
+/* ════════════════════════════════════════════════════════════
    BOOT
    ════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
@@ -2743,4 +3671,6 @@ document.addEventListener('DOMContentLoaded', () => {
   safe('SubjectLogger.init', () => SubjectLogger.init());
   safe('ExamCountdown.init', () => ExamCountdown.init());
   safe('LocalLeaderboard.init', () => LocalLeaderboard.init());
+  safe('AIStudyAnalytics.init', () => AIStudyAnalytics.init());
+  safe('Top30Leaderboard.init', () => Top30Leaderboard.init());
 });
