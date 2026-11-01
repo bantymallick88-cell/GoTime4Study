@@ -20,7 +20,7 @@ const Store = (() => {
     settings: { focus: 25, short: 5, long: 15, custom: 45, customBreak: 10, rounds: 4, autoStart: false, chime: true, volume: 70, strictMode: false },
     sessions: {},
     sessionsCount: {},
-    profile: { nick: '', avatar: '🦉' },
+    profile: { name: '', nick: '', city: '', state: '', country: '', avatar: '🦉' },
     badges: [],
     scene: null,
     gradient: true,
@@ -2449,8 +2449,12 @@ const UI = (() => {
 
     const headerIcon = $('#headerThemeToggleIcon');
     const headerBtn = document.getElementById('themeToggleBtn') || $('#btnHeaderThemeToggle');
-    if (headerIcon) headerIcon.textContent = isLight ? '🌙' : '☀️';
-    if (headerBtn) headerBtn.setAttribute('title', isLight ? 'Switch to Dark Mode (🌙)' : 'Switch to Light Mode (☀️)');
+    if (headerIcon) headerIcon.textContent = isLight ? '☀️' : '🌙';
+    if (headerBtn) {
+      headerBtn.classList.toggle('is-light', isLight);
+      headerBtn.setAttribute('aria-checked', isLight ? 'true' : 'false');
+      headerBtn.setAttribute('title', isLight ? 'Switch to Dark Mode (🌙)' : 'Switch to Light Mode (☀️)');
+    }
 
     const btn = $('#btnTheme');
     if (btn) btn.innerHTML = `<span>${isLight ? '🌙' : '☀️'}</span><small class="btn-caption">Theme</small>`;
@@ -2477,7 +2481,7 @@ const UI = (() => {
 
   function syncProfileUI() {
     const p = Store.d.profile || { nick: 'FocusMaster', avatar: '🦉' };
-    const nick = p.nick && p.nick.trim() ? p.nick.trim() : 'FocusMaster';
+    const nick = (p.name && p.name.trim()) ? p.name.trim() : (p.nick && p.nick.trim() ? p.nick.trim() : 'FocusMaster');
     const avatar = p.avatar || '🦉';
 
     const sidebarNick = $('#sidebarNick');
@@ -2522,7 +2526,14 @@ const UI = (() => {
   function openProfileModal() {
     const p = Store.d.profile || { nick: 'FocusMaster', avatar: '🦉' };
     const nickInput = $('#profileNickInput');
-    if (nickInput) nickInput.value = p.nick || 'FocusMaster';
+    if (nickInput) nickInput.value = p.name || p.nick || 'FocusMaster';
+
+    const cityInput = $('#profileCityInput');
+    if (cityInput) cityInput.value = p.city || '';
+    const stateInput = $('#profileStateInput');
+    if (stateInput) stateInput.value = p.state || '';
+    const countryInput = $('#profileCountryInput');
+    if (countryInput) countryInput.value = p.country || '';
 
     const picker = $('#profileAvatarPicker');
     if (picker) {
@@ -2752,13 +2763,27 @@ const UI = (() => {
         btnSaveProfile.addEventListener('click', () => {
           const nickInput = $('#profileNickInput');
           const nick = nickInput ? nickInput.value.trim() || 'FocusMaster' : 'FocusMaster';
+          const cityInput = $('#profileCityInput');
+          const city = cityInput ? cityInput.value.trim() || 'San Francisco' : 'San Francisco';
+          const stateInput = $('#profileStateInput');
+          const state = stateInput ? stateInput.value.trim() || 'California' : 'California';
+          const countryInput = $('#profileCountryInput');
+          const country = countryInput ? countryInput.value.trim() || 'United States 🇺🇸' : 'United States 🇺🇸';
           const selAvatar = $('#profileAvatarPicker .avatar-choice.selected')?.dataset.avatar || '🦉';
 
-          Store.d.profile = { nick, avatar: selAvatar };
+          Store.d.profile = {
+            ...Store.d.profile,
+            name: nick,
+            nick,
+            city,
+            state,
+            country,
+            avatar: selAvatar,
+          };
           Store.save();
           syncProfileUI();
           overlay('localProfileOverlay', false);
-          toast('Local profile saved ✓', 'good');
+          toast('Local profile saved ✓ Rankings updated', 'good');
 
           // If inside a live room, update my nick & avatar
           if (Rooms && Rooms.inRoom) {
@@ -2766,6 +2791,9 @@ const UI = (() => {
           }
           if (typeof LocalLeaderboard !== 'undefined' && LocalLeaderboard.render) {
             LocalLeaderboard.render();
+          }
+          if (typeof Top30Leaderboard !== 'undefined' && Top30Leaderboard.render) {
+            Top30Leaderboard.render();
           }
         });
       }
@@ -3405,52 +3433,62 @@ const Top30Leaderboard = (() => {
   let activeScope = 'week'; // 'week' or 'month'
 
   const PEER_STUDENTS = [
-    { nick: 'Aarav Sharma', avatar: '👨‍🎓', weekBase: 38.5, monthBase: 154.0, streak: 28 },
-    { nick: 'Elena Rostova', avatar: '👩‍💻', weekBase: 35.2, monthBase: 141.5, streak: 21 },
-    { nick: 'Liam Chen', avatar: '⚡', weekBase: 33.8, monthBase: 135.0, streak: 26 },
-    { nick: 'Sophia Patel', avatar: '📚', weekBase: 31.4, monthBase: 126.0, streak: 19 },
-    { nick: 'Kenji Takahashi', avatar: '🎯', weekBase: 29.6, monthBase: 118.5, streak: 17 },
-    { nick: 'Maya Lin', avatar: '🌸', weekBase: 28.0, monthBase: 112.0, streak: 23 },
-    { nick: 'Marcus Thorne', avatar: '☕', weekBase: 26.5, monthBase: 106.0, streak: 15 },
-    { nick: 'Ananya Roy', avatar: '🎨', weekBase: 25.1, monthBase: 100.5, streak: 14 },
-    { nick: 'Lucas Dubois', avatar: '🚀', weekBase: 23.8, monthBase: 95.2, streak: 18 },
-    { nick: 'Zara Al-Mansoor', avatar: '✨', weekBase: 22.4, monthBase: 89.6, streak: 12 },
-    { nick: 'Devon Vance', avatar: '🎧', weekBase: 21.0, monthBase: 84.0, streak: 16 },
-    { nick: 'Chiara Rossi', avatar: '🌿', weekBase: 19.5, monthBase: 78.0, streak: 11 },
-    { nick: 'Ethan Walker', avatar: '🔥', weekBase: 18.2, monthBase: 72.8, streak: 13 },
-    { nick: 'Priya Nair', avatar: '🪐', weekBase: 17.0, monthBase: 68.0, streak: 10 },
-    { nick: 'Mateo Hernandez', avatar: '💻', weekBase: 15.8, monthBase: 63.2, streak: 9 },
-    { nick: 'Chloe Dupont', avatar: '📖', weekBase: 14.5, monthBase: 58.0, streak: 14 },
-    { nick: 'Rohan Mehra', avatar: '🧠', weekBase: 13.2, monthBase: 52.8, streak: 8 },
-    { nick: 'Emma Watson', avatar: '🕊️', weekBase: 12.0, monthBase: 48.0, streak: 7 },
-    { nick: 'Hiroshi Sato', avatar: '🏹', weekBase: 11.1, monthBase: 44.4, streak: 6 },
-    { nick: 'Ingrid Berg', avatar: '❄️', weekBase: 10.0, monthBase: 40.0, streak: 9 },
-    { nick: 'Noah Becker', avatar: '⚙️', weekBase: 9.2, monthBase: 36.8, streak: 5 },
-    { nick: 'Fatima Zahra', avatar: '🌙', weekBase: 8.4, monthBase: 33.6, streak: 6 },
-    { nick: 'Gabriel Silva', avatar: '🌊', weekBase: 7.5, monthBase: 30.0, streak: 4 },
-    { nick: 'Sunita Rao', avatar: '⭐', weekBase: 6.8, monthBase: 27.2, streak: 5 },
-    { nick: 'Felix Müller', avatar: '🦊', weekBase: 6.0, monthBase: 24.0, streak: 3 },
-    { nick: 'Hanna Lindqvist', avatar: '🌲', weekBase: 5.2, monthBase: 20.8, streak: 4 },
-    { nick: 'Tariq Aziz', avatar: '🦅', weekBase: 4.5, monthBase: 18.0, streak: 3 },
-    { nick: 'Mei-Ling Wang', avatar: '🎋', weekBase: 3.8, monthBase: 15.2, streak: 2 },
-    { nick: 'Oliver Smith', avatar: '🧭', weekBase: 3.1, monthBase: 12.4, streak: 2 },
+    { nick: 'Aarav Sharma', avatar: '👨‍🎓', weekBase: 38.5, monthBase: 154.0, streak: 28, city: 'New Delhi', state: 'Delhi', country: 'India 🇮🇳' },
+    { nick: 'Elena Rostova', avatar: '👩‍💻', weekBase: 35.2, monthBase: 141.5, streak: 21, city: 'Munich', state: 'Bavaria', country: 'Germany 🇩🇪' },
+    { nick: 'Liam Chen', avatar: '⚡', weekBase: 33.8, monthBase: 135.0, streak: 26, city: 'Taipei', state: 'Northern', country: 'Taiwan 🇹🇼' },
+    { nick: 'Sophia Patel', avatar: '📚', weekBase: 31.4, monthBase: 126.0, streak: 19, city: 'London', state: 'England', country: 'United Kingdom 🇬🇧' },
+    { nick: 'Kenji Takahashi', avatar: '🎯', weekBase: 29.6, monthBase: 118.5, streak: 17, city: 'Tokyo', state: 'Kanto', country: 'Japan 🇯🇵' },
+    { nick: 'Maya Lin', avatar: '🌸', weekBase: 28.0, monthBase: 112.0, streak: 23, city: 'Singapore', state: 'Central', country: 'Singapore 🇸🇬' },
+    { nick: 'Marcus Thorne', avatar: '☕', weekBase: 26.5, monthBase: 106.0, streak: 15, city: 'Seattle', state: 'Washington', country: 'United States 🇺🇸' },
+    { nick: 'Ananya Roy', avatar: '🎨', weekBase: 25.1, monthBase: 100.5, streak: 14, city: 'Kolkata', state: 'West Bengal', country: 'India 🇮🇳' },
+    { nick: 'Lucas Dubois', avatar: '🚀', weekBase: 23.8, monthBase: 95.2, streak: 18, city: 'Paris', state: 'Île-de-France', country: 'France 🇫🇷' },
+    { nick: 'Zara Al-Mansoor', avatar: '✨', weekBase: 22.4, monthBase: 89.6, streak: 12, city: 'Dubai', state: 'Dubai', country: 'United Arab Emirates 🇦🇪' },
+    { nick: 'Devon Vance', avatar: '🎧', weekBase: 21.0, monthBase: 84.0, streak: 16, city: 'Toronto', state: 'Ontario', country: 'Canada 🇨🇦' },
+    { nick: 'Chiara Rossi', avatar: '🌿', weekBase: 19.5, monthBase: 78.0, streak: 11, city: 'Milan', state: 'Lombardy', country: 'Italy 🇮🇹' },
+    { nick: 'Ethan Walker', avatar: '🔥', weekBase: 18.2, monthBase: 72.8, streak: 13, city: 'Melbourne', state: 'Victoria', country: 'Australia 🇦🇺' },
+    { nick: 'Priya Nair', avatar: '🪐', weekBase: 17.0, monthBase: 68.0, streak: 10, city: 'Bengaluru', state: 'Karnataka', country: 'India 🇮🇳' },
+    { nick: 'Mateo Hernandez', avatar: '💻', weekBase: 15.8, monthBase: 63.2, streak: 9, city: 'Madrid', state: 'Community of Madrid', country: 'Spain 🇪🇸' },
+    { nick: 'Chloe Dupont', avatar: '📖', weekBase: 14.5, monthBase: 58.0, streak: 14, city: 'Lyon', state: 'Auvergne-Rhône-Alpes', country: 'France 🇫🇷' },
+    { nick: 'Rohan Mehra', avatar: '🧠', weekBase: 13.2, monthBase: 52.8, streak: 8, city: 'Mumbai', state: 'Maharashtra', country: 'India 🇮🇳' },
+    { nick: 'Emma Watson', avatar: '🕊️', weekBase: 12.0, monthBase: 48.0, streak: 7, city: 'Oxford', state: 'Oxfordshire', country: 'United Kingdom 🇬🇧' },
+    { nick: 'Hiroshi Sato', avatar: '🏹', weekBase: 11.1, monthBase: 44.4, streak: 6, city: 'Osaka', state: 'Kansai', country: 'Japan 🇯🇵' },
+    { nick: 'Ingrid Berg', avatar: '❄️', weekBase: 10.0, monthBase: 40.0, streak: 9, city: 'Oslo', state: 'Østlandet', country: 'Norway 🇳🇴' },
+    { nick: 'Noah Becker', avatar: '⚙️', weekBase: 9.2, monthBase: 36.8, streak: 5, city: 'Berlin', state: 'Berlin', country: 'Germany 🇩🇪' },
+    { nick: 'Fatima Zahra', avatar: '🌙', weekBase: 8.4, monthBase: 33.6, streak: 6, city: 'Cairo', state: 'Cairo Governorate', country: 'Egypt 🇪🇬' },
+    { nick: 'Gabriel Silva', avatar: '🌊', weekBase: 7.5, monthBase: 30.0, streak: 4, city: 'São Paulo', state: 'São Paulo', country: 'Brazil 🇧🇷' },
+    { nick: 'Sunita Rao', avatar: '⭐', weekBase: 6.8, monthBase: 27.2, streak: 5, city: 'Hyderabad', state: 'Telangana', country: 'India 🇮🇳' },
+    { nick: 'Felix Müller', avatar: '🦊', weekBase: 6.0, monthBase: 24.0, streak: 3, city: 'Zurich', state: 'Zurich', country: 'Switzerland 🇨🇭' },
+    { nick: 'Hanna Lindqvist', avatar: '🌲', weekBase: 5.2, monthBase: 20.8, streak: 4, city: 'Stockholm', state: 'Stockholm County', country: 'Sweden 🇸🇪' },
+    { nick: 'Tariq Aziz', avatar: '🦅', weekBase: 4.5, monthBase: 18.0, streak: 3, city: 'Istanbul', state: 'Marmara', country: 'Turkey 🇹🇷' },
+    { nick: 'Mei-Ling Wang', avatar: '🎋', weekBase: 3.8, monthBase: 15.2, streak: 2, city: 'Seoul', state: 'Seoul Capital', country: 'South Korea 🇰🇷' },
+    { nick: 'Oliver Smith', avatar: '🧭', weekBase: 3.1, monthBase: 12.4, streak: 2, city: 'Boston', state: 'Massachusetts', country: 'United States 🇺🇸' },
   ];
 
   function getCombinedList() {
-    const profile = Store.d.profile || { nick: 'You', avatar: '🦉' };
-    const userNick = (profile.nick && profile.nick.trim()) ? profile.nick.trim() : 'You';
+    const profile = Store.d.profile || {};
+    const userNick = (profile.name && profile.name.trim())
+      ? profile.name.trim()
+      : ((profile.nick && profile.nick.trim()) ? profile.nick.trim() : 'FocusMaster');
     const userAvatar = profile.avatar || '🦉';
+    const userCity = (profile.city && profile.city.trim()) ? profile.city.trim() : 'San Francisco';
+    const userState = (profile.state && profile.state.trim()) ? profile.state.trim() : 'California';
+    const userCountry = (profile.country && profile.country.trim()) ? profile.country.trim() : 'United States 🇺🇸';
 
-    const weekMinutes = (typeof Stats !== 'undefined' && Stats.totals) ? (Stats.totals().week || 0) : 0;
-    const monthMinutes = (typeof Stats !== 'undefined' && Stats.totals) ? (Stats.totals().month || 0) : 0;
+    const totals = (typeof Stats !== 'undefined' && Stats.totals) ? Stats.totals() : { week: 0, month: 0, all: 0 };
     const streakDays = (typeof Stats !== 'undefined' && Stats.streak) ? (Stats.streak() || 1) : 1;
+
+    const realWeekHours = (totals.week || 0) / 60;
+    const realMonthHours = (totals.month || 0) / 60;
 
     const userEntry = {
       isMe: true,
       nick: userNick,
       avatar: userAvatar,
-      weekHours: weekMinutes / 60,
-      monthHours: monthMinutes / 60,
+      city: userCity,
+      state: userState,
+      country: userCountry,
+      weekHours: realWeekHours,
+      monthHours: realMonthHours,
       streak: Math.max(streakDays, 1),
     };
 
@@ -3458,6 +3496,9 @@ const Top30Leaderboard = (() => {
       isMe: false,
       nick: p.nick,
       avatar: p.avatar,
+      city: p.city,
+      state: p.state,
+      country: p.country,
       weekHours: p.weekBase,
       monthHours: p.monthBase,
       streak: p.streak,
@@ -3488,12 +3529,17 @@ const Top30Leaderboard = (() => {
     const myItem = myRankIdx >= 0 ? ranked[myRankIdx] : null;
     const myHours = myItem ? myItem.hours : 0;
     const myStreak = myItem ? myItem.streak : 1;
+    const profile = Store.d.profile || {};
+    const myCity = myItem ? myItem.city : (profile.city || 'San Francisco');
+    const myCountry = myItem ? myItem.country : (profile.country || 'United States 🇺🇸');
 
     if (mySummaryEl) {
       mySummaryEl.innerHTML = `
         <span class="my-rank-badge">Your Rank: <b>#${myRank}</b></span>
         <span>·</span>
-        <span class="my-rank-stat">${myHours.toFixed(1)}h Focus</span>
+        <span class="my-rank-stat">${myHours.toFixed(1)} hrs Focus</span>
+        <span>·</span>
+        <span class="my-rank-loc" title="${esc(myCity)}, ${esc(myCountry)}">📍 ${esc(myCity)}, ${esc(myCountry)}</span>
         <span>·</span>
         <span class="my-rank-streak">${myStreak}🔥 Streak</span>
       `;
@@ -3504,34 +3550,22 @@ const Top30Leaderboard = (() => {
       const top2 = ranked[1];
       const top3 = ranked[2];
 
+      const renderPodiumCol = (item, rankNum, medal, badgeClass, pillarClass) => `
+        <div class="podium-col ${item.isMe ? 'is-me' : ''}">
+          ${rankNum === 1 ? '<div class="podium-crown">👑</div>' : ''}
+          <div class="podium-avatar">${esc(item.avatar)}</div>
+          <span class="podium-badge ${badgeClass}">#${rankNum} ${medal}</span>
+          <span class="podium-nick" title="${esc(item.nick)}">${esc(item.nick)}${item.isMe ? '<span class="me-chip">YOU</span>' : ''}</span>
+          <span class="podium-hours">${item.hours.toFixed(1)} hrs</span>
+          <span class="podium-streak" title="${esc(item.city)}, ${esc(item.country)}">📍 ${esc(item.city)} · ${item.streak}🔥</span>
+          <div class="podium-pillar ${pillarClass}"></div>
+        </div>
+      `;
+
       podiumEl.innerHTML = `
-        <div class="podium-col ${top2.isMe ? 'is-me' : ''}">
-          <div class="podium-avatar">${esc(top2.avatar)}</div>
-          <span class="podium-badge badge-silver">#2 SILVER</span>
-          <span class="podium-nick">${esc(top2.nick)}${top2.isMe ? '<span class="me-chip">YOU</span>' : ''}</span>
-          <span class="podium-hours">${top2.hours.toFixed(1)}h</span>
-          <span class="podium-streak">${top2.streak}🔥</span>
-          <div class="podium-pillar pillar-2"></div>
-        </div>
-
-        <div class="podium-col ${top1.isMe ? 'is-me' : ''}">
-          <div class="podium-crown">👑</div>
-          <div class="podium-avatar">${esc(top1.avatar)}</div>
-          <span class="podium-badge badge-gold">#1 GOLD</span>
-          <span class="podium-nick">${esc(top1.nick)}${top1.isMe ? '<span class="me-chip">YOU</span>' : ''}</span>
-          <span class="podium-hours">${top1.hours.toFixed(1)}h</span>
-          <span class="podium-streak">${top1.streak}🔥</span>
-          <div class="podium-pillar pillar-1"></div>
-        </div>
-
-        <div class="podium-col ${top3.isMe ? 'is-me' : ''}">
-          <div class="podium-avatar">${esc(top3.avatar)}</div>
-          <span class="podium-badge badge-bronze">#3 BRONZE</span>
-          <span class="podium-nick">${esc(top3.nick)}${top3.isMe ? '<span class="me-chip">YOU</span>' : ''}</span>
-          <span class="podium-hours">${top3.hours.toFixed(1)}h</span>
-          <span class="podium-streak">${top3.streak}🔥</span>
-          <div class="podium-pillar pillar-3"></div>
-        </div>
+        ${renderPodiumCol(top2, 2, 'SILVER', 'badge-silver', 'pillar-2')}
+        ${renderPodiumCol(top1, 1, 'GOLD', 'badge-gold', 'pillar-1')}
+        ${renderPodiumCol(top3, 3, 'BRONZE', 'badge-bronze', 'pillar-3')}
       `;
     }
 
@@ -3552,15 +3586,60 @@ const Top30Leaderboard = (() => {
             <span class="top30-nick" title="${esc(student.nick)}">${esc(student.nick)}</span>
             ${student.isMe ? '<span class="me-tag">YOU</span>' : ''}
           </span>
-          <span class="col-streak">
-            <span class="top30-streak-pill">${student.streak}🔥</span>
+          <span class="col-hours">
+            <span class="top30-time-val">${student.hours.toFixed(1)} hrs</span>
           </span>
-          <span class="col-time">
-            <span class="top30-time-val">${student.hours.toFixed(1)}h</span>
+          <span class="col-city" title="${esc(student.city)}">
+            <span class="top30-geo-val">${esc(student.city)}</span>
+          </span>
+          <span class="col-state" title="${esc(student.state)}">
+            <span class="top30-geo-val">${esc(student.state)}</span>
+          </span>
+          <span class="col-country">
+            <span class="top30-country-pill" title="${esc(student.country)}">${esc(student.country)}</span>
           </span>
         </li>
       `;
     }).join('');
+
+    // Prepopulate registration form inputs
+    const nameInp = $('#lbRegName');
+    const cityInp = $('#lbRegCity');
+    const stateInp = $('#lbRegState');
+    const countryInp = $('#lbRegCountry');
+    const regToggleBtnText = $('#toggleRegBtnText');
+
+    if (nameInp && !nameInp.value) nameInp.value = profile.name || profile.nick || '';
+    if (cityInp && !cityInp.value) cityInp.value = profile.city || '';
+    if (stateInp && !stateInp.value) stateInp.value = profile.state || '';
+    if (countryInp && !countryInp.value) countryInp.value = profile.country || '';
+
+    if (regToggleBtnText) {
+      const hasProfile = !!(profile.name || profile.nick);
+      regToggleBtnText.textContent = hasProfile
+        ? `✏️ Edit Profile (${profile.name || profile.nick})`
+        : '✏️ Register Free Profile';
+    }
+
+    // Mini avatar picker inside registration form
+    const pickerEl = $('#lbRegAvatarPicker');
+    if (pickerEl && !pickerEl.hasChildNodes()) {
+      const curAvatar = profile.avatar || '🦉';
+      const avatars = ['🦉', '⚡', '👨‍🎓', '👩‍💻', '🚀', '🎯', '🔥', '🧠', '🌸', '☕', '🪐', '💻'];
+      pickerEl.innerHTML = avatars.map((av) => `
+        <button type="button" class="avatar-choice ${av === curAvatar ? 'selected' : ''}" data-avatar="${av}" aria-label="Avatar ${av}">
+          ${av}
+        </button>
+      `).join('');
+
+      pickerEl.querySelectorAll('.avatar-choice').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          pickerEl.querySelectorAll('.avatar-choice').forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+    }
   }
 
   function setScope(scope) {
@@ -3620,8 +3699,10 @@ const Top30Leaderboard = (() => {
       });
     });
 
-    // Direct binding for the drawer item link and dashboard card buttons
-    const triggerBtns = document.querySelectorAll('#btnSidebarTop30Leaderboard, #btnOpenTop30Leaderboard, [data-nav="top30-leaderboard"], [data-modal="leaderboardModal"]');
+    // Direct binding for the header button, drawer item link, and dashboard card buttons
+    const triggerBtns = document.querySelectorAll(
+      '#btnHeaderLeaderboard, #btnSidebarTop30Leaderboard, #btnOpenTop30Leaderboard, [data-nav="top30-leaderboard"], [data-modal="leaderboardModal"]'
+    );
     triggerBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -3630,12 +3711,72 @@ const Top30Leaderboard = (() => {
       });
     });
 
+    // Toggle Registration Form
+    const btnToggleReg = $('#btnToggleRegForm');
+    const formReg = $('#formLeaderboardReg');
+    if (btnToggleReg && formReg) {
+      btnToggleReg.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isHidden = (formReg.style.display === 'none' || !formReg.style.display);
+        formReg.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+          const firstInp = $('#lbRegName');
+          if (firstInp) firstInp.focus();
+        }
+      });
+    }
+
+    // Submit Free Profile Registration
+    if (formReg) {
+      formReg.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = ($('#lbRegName')?.value || '').trim() || 'FocusMaster';
+        const city = ($('#lbRegCity')?.value || '').trim() || 'San Francisco';
+        const state = ($('#lbRegState')?.value || '').trim() || 'California';
+        const country = ($('#lbRegCountry')?.value || '').trim() || 'United States 🇺🇸';
+        const selAvatar = $('#lbRegAvatarPicker .avatar-choice.selected')?.dataset.avatar || '🦉';
+
+        Store.d.profile = {
+          ...Store.d.profile,
+          name,
+          nick: name,
+          city,
+          state,
+          country,
+          avatar: selAvatar,
+        };
+        Store.save();
+        syncProfileUI();
+
+        formReg.style.display = 'none';
+
+        render();
+        if (typeof LocalLeaderboard !== 'undefined' && LocalLeaderboard.render) {
+          LocalLeaderboard.render();
+        }
+        if (typeof Rooms !== 'undefined' && Rooms.inRoom) {
+          Rooms.broadcastState();
+        }
+
+        toast('Profile registered! Study hours synced to Top 30 Leaderboard 🏆', 'good');
+      });
+    }
+
     const overlayEl = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
     if (overlayEl) {
       overlayEl.addEventListener('click', (e) => {
         if (e.target === overlayEl) close();
       });
     }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
+        if (modal && !modal.hidden && modal.style.display !== 'none') {
+          close();
+        }
+      }
+    });
 
     render();
   }

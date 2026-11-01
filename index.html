@@ -176,6 +176,10 @@
 
       <div class="header-right-group">
         <div class="header-actions">
+          <!-- Top 30 Global Leaderboard Button in Header -->
+          <button id="btnHeaderLeaderboard" class="icon-btn header-lb-btn" title="Top 30 Global Focus Leaders (🏆)" aria-label="Open Top 30 Global Focus Leaderboard">
+            <span class="hlb-icon">🏆</span><small class="btn-caption">Leaders</small>
+          </button>
           <button id="btnHeaderSound" class="icon-btn" title="Toggle Sound Chime (🔊)" aria-label="Sound Toggle">
             <span id="soundHeaderIcon">🔊</span><small class="btn-caption" id="soundHeaderLabel">Audio</small>
           </button>
@@ -184,9 +188,15 @@
           </button>
         </div>
 
-        <!-- Sun/Moon Theme Toggle Button on the absolute RIGHT end of header -->
-        <button id="themeToggleBtn" class="theme-quick-toggle-btn header-extreme-right-btn" aria-label="Toggle Dark / Light Theme" title="Toggle Dark / Light Theme">
-          <span class="theme-toggle-icon" id="headerThemeToggleIcon">☀️</span>
+        <!-- Neumorphic / Soft-UI Aesthetic Theme Toggle Switch (Sun/Moon with smooth sliding transition) -->
+        <button id="themeToggleBtn" class="neumorphic-theme-switch header-extreme-right-btn" role="switch" aria-checked="false" aria-label="Toggle Dark / Light Theme" title="Toggle Dark / Light Theme">
+          <span class="neumorphic-switch-track">
+            <span class="switch-icon-bg sun-icon-bg" aria-hidden="true">☀️</span>
+            <span class="switch-icon-bg moon-icon-bg" aria-hidden="true">🌙</span>
+            <span class="neumorphic-switch-thumb">
+              <span class="thumb-icon" id="headerThemeToggleIcon">🌙</span>
+            </span>
+          </span>
         </button>
       </div>
     </header>
@@ -235,7 +245,7 @@
         </button>
         <button class="sidebar-link" data-nav="top30-leaderboard" data-modal="leaderboardModal" id="btnSidebarTop30Leaderboard">
           <span class="sidebar-icon">🏆</span>
-          <span class="sidebar-text">Top 30 Focus Leaderboard</span>
+          <span class="sidebar-text">Top 30 Global Focus Leaders</span>
           <span class="sidebar-pulse-dot"></span>
         </button>
         <button class="sidebar-link" data-nav="subjects">
@@ -1348,8 +1358,8 @@
         <div class="top30-head-title">
           <div class="top30-trophy-pill">🏆</div>
           <div>
-            <h2>Top 30 Focus Leaderboard</h2>
-            <p class="hint-sm">Live real-time student rankings by total verified focus hours</p>
+            <h2>Top 30 Global Focus Leaders</h2>
+            <p class="hint-sm">Live verified rankings by total study hours across cities &amp; countries</p>
           </div>
         </div>
         <button class="icon-btn close-btn" id="btnCloseLeaderboardModal" data-close="leaderboardModal" aria-label="Close Leaderboard Modal">✕</button>
@@ -1370,18 +1380,69 @@
         </div>
       </div>
 
+      <!-- Free User Profile Registration Form (Instantly Syncs Study Hours to Leaderboard) -->
+      <div class="top30-reg-card glass" id="top30RegCard">
+        <div class="top30-reg-header">
+          <div class="reg-title-wrap">
+            <span class="reg-badge">⚡ 100% FREE · NO LOGIN BARRIER</span>
+            <h3 class="reg-title">Sync Your Study Hours to Global Rankings</h3>
+            <p class="hint-sm">Enter your Name, City, State, and Country to rank on the Top 30 Global Board.</p>
+          </div>
+          <button type="button" class="ctrl-btn ghost small toggle-reg-btn" id="btnToggleRegForm" title="Edit Profile Details">
+            <span id="toggleRegBtnText">✏️ Register / Edit Profile</span>
+          </button>
+        </div>
+
+        <form id="formLeaderboardReg" class="top30-reg-form" style="display: none;">
+          <div class="reg-inputs-grid">
+            <div class="form-group">
+              <label class="field-label-sm" for="lbRegName">User Name</label>
+              <input type="text" id="lbRegName" class="txt-input sm" maxlength="28" placeholder="e.g. Alex Johnson" required />
+            </div>
+            <div class="form-group">
+              <label class="field-label-sm" for="lbRegCity">City</label>
+              <input type="text" id="lbRegCity" class="txt-input sm" maxlength="32" placeholder="e.g. San Francisco" required />
+            </div>
+            <div class="form-group">
+              <label class="field-label-sm" for="lbRegState">State / Province</label>
+              <input type="text" id="lbRegState" class="txt-input sm" maxlength="32" placeholder="e.g. California" required />
+            </div>
+            <div class="form-group">
+              <label class="field-label-sm" for="lbRegCountry">Country</label>
+              <input type="text" id="lbRegCountry" class="txt-input sm" maxlength="32" placeholder="e.g. United States 🇺🇸" required />
+            </div>
+          </div>
+
+          <div class="reg-bottom-row">
+            <div class="reg-avatar-group">
+              <span class="field-label-sm">Avatar:</span>
+              <div class="avatar-mini-picker" id="lbRegAvatarPicker"></div>
+            </div>
+            <div class="reg-actions">
+              <button type="submit" id="btnSaveLeaderboardProfile" class="ctrl-btn primary small">
+                <span>🚀 Save &amp; Sync to Leaderboard</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
       <!-- Top 3 Podium Highlights -->
       <div class="top30-podium" id="top30Podium"></div>
 
       <!-- Scrollable Leaderboard Table (Ranks 1 to 30) -->
       <div class="top30-table-wrap">
-        <div class="top30-table-head-row">
-          <span class="col-rank">RANK</span>
-          <span class="col-user">STUDENT</span>
-          <span class="col-streak">STREAK</span>
-          <span class="col-time">FOCUS TIME</span>
+        <div class="top30-table-inner">
+          <div class="top30-table-head-row">
+            <span class="col-rank">RANK</span>
+            <span class="col-user">USER NAME</span>
+            <span class="col-hours">TOTAL HOURS STUDIED</span>
+            <span class="col-city">CITY</span>
+            <span class="col-state">STATE</span>
+            <span class="col-country">COUNTRY</span>
+          </div>
+          <ul class="top30-rows-list" id="top30RowsList"></ul>
         </div>
-        <ul class="top30-rows-list" id="top30RowsList"></ul>
       </div>
 
       <div class="modal-foot top30-modal-foot">
@@ -1398,19 +1459,34 @@
         <button class="icon-btn close-btn" data-close="localProfileOverlay">✕</button>
       </div>
       <div class="profile-modal-body">
-        <p class="hint-sm">Customize your study avatar & nickname. Saved locally in your browser storage with zero login or signup needed.</p>
+        <p class="hint-sm">Customize your study avatar, name &amp; location. Saved in browser storage with zero login or signup needed, and automatically syncs to the Top 30 Leaderboard.</p>
 
         <div class="form-group" style="margin-top: 12px;">
-          <label class="field-label" for="profileNickInput">Study Nickname</label>
-          <input type="text" id="profileNickInput" class="txt-input" maxlength="18" placeholder="e.g. FocusMaster" />
+          <label class="field-label" for="profileNickInput">Full Name / Nickname</label>
+          <input type="text" id="profileNickInput" class="txt-input" maxlength="28" placeholder="e.g. FocusMaster" />
         </div>
 
-        <div class="form-group">
+        <div class="profile-geo-grid">
+          <div class="form-group">
+            <label class="field-label-sm" for="profileCityInput">City</label>
+            <input type="text" id="profileCityInput" class="txt-input sm" maxlength="32" placeholder="e.g. San Francisco" />
+          </div>
+          <div class="form-group">
+            <label class="field-label-sm" for="profileStateInput">State / Province</label>
+            <input type="text" id="profileStateInput" class="txt-input sm" maxlength="32" placeholder="e.g. California" />
+          </div>
+          <div class="form-group">
+            <label class="field-label-sm" for="profileCountryInput">Country</label>
+            <input type="text" id="profileCountryInput" class="txt-input sm" maxlength="32" placeholder="e.g. United States 🇺🇸" />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
           <label class="field-label">Choose Avatar</label>
           <div id="profileAvatarPicker" class="avatar-picker"></div>
         </div>
 
-        <button id="btnSaveProfile" class="ctrl-btn primary small" style="margin-top: 14px; width: 100%;">Save Local Profile</button>
+        <button id="btnSaveProfile" class="ctrl-btn primary small" style="margin-top: 14px; width: 100%;">Save Local Profile &amp; Sync Ranks</button>
       </div>
     </div>
   </div>

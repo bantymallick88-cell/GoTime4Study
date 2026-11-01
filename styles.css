@@ -606,25 +606,41 @@ header,
   line-height: 1;
 }
 
-.theme-quick-toggle-btn {
+/* ── 4.1.1 Header Action Buttons & Top 30 Leaderboard Button ── */
+.header-lb-btn {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #fbbf24 !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.18) !important;
+  transition: all 0.25s var(--ease) !important;
+}
+
+.header-lb-btn:hover {
+  background: rgba(245, 158, 11, 0.25) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.45) !important;
+  transform: translateY(-1px) scale(1.04) !important;
+}
+
+.header-lb-btn .hlb-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ── 4.1.2 Neumorphic / Soft-UI Aesthetic Theme Switch (Sun / Moon) ── */
+.neumorphic-theme-switch {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-full);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: #fbbf24;
-  font-size: 1.25rem;
+  padding: 0;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  outline: none;
   position: relative;
-  z-index: 15;
+  z-index: 20;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Extreme Top Right Corner Positioning */
@@ -634,36 +650,121 @@ header,
   flex-shrink: 0;
 }
 
-.theme-quick-toggle-btn:hover {
-  background: rgba(251, 191, 36, 0.18);
-  border-color: #fbbf24;
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.45);
-  transform: scale(1.12) rotate(18deg);
+.neumorphic-switch-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 66px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: var(--r-full);
+  background: #0a101d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    inset 3px 3px 6px rgba(0, 0, 0, 0.8),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 }
 
-.theme-quick-toggle-btn:active {
-  transform: scale(0.9);
-  transition-duration: 0.1s;
-}
-
-.theme-toggle-icon {
-  display: inline-block;
+.switch-icon-bg {
+  font-size: 0.82rem;
   line-height: 1;
-  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0.65;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  user-select: none;
+  pointer-events: none;
 }
 
-:root[data-theme="light"] .theme-quick-toggle-btn {
-  background: rgba(15, 23, 42, 0.06);
-  border-color: rgba(15, 23, 42, 0.15);
-  color: #6366f1;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+.sun-icon-bg {
+  filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5));
 }
 
-:root[data-theme="light"] .theme-quick-toggle-btn:hover {
-  background: rgba(99, 102, 241, 0.14);
-  border-color: #6366f1;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
-  transform: scale(1.12) rotate(-18deg);
+.moon-icon-bg {
+  filter: drop-shadow(0 0 2px rgba(165, 180, 252, 0.5));
+}
+
+.neumorphic-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    2px 2px 5px rgba(0, 0, 0, 0.5),
+    -1px -1px 3px rgba(255, 255, 255, 0.12),
+    0 0 10px rgba(99, 102, 241, 0.4);
+  display: grid;
+  place-items: center;
+  transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease;
+  transform: translateX(30px); /* Dark mode thumb sits on the right over moon */
+}
+
+.thumb-icon {
+  font-size: 0.88rem;
+  line-height: 1;
+  transition: transform 0.35s ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Hover & Active States */
+.neumorphic-theme-switch:hover .neumorphic-switch-thumb {
+  transform: translateX(30px) scale(1.08);
+  box-shadow: 
+    2px 2px 6px rgba(0, 0, 0, 0.6),
+    -1px -1px 4px rgba(255, 255, 255, 0.2),
+    0 0 16px rgba(99, 102, 241, 0.6);
+}
+
+.neumorphic-theme-switch:active .neumorphic-switch-thumb {
+  transform: translateX(30px) scale(0.92);
+}
+
+/* Light Mode Soft-UI States */
+:root[data-theme="light"] .neumorphic-switch-track,
+.neumorphic-theme-switch.is-light .neumorphic-switch-track {
+  background: #e2e8f0;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 
+    inset 3px 3px 6px rgba(160, 175, 195, 0.65),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.95),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="light"] .neumorphic-switch-thumb,
+.neumorphic-theme-switch.is-light .neumorphic-switch-thumb {
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 
+    2px 2px 5px rgba(0, 0, 0, 0.15),
+    -2px -2px 4px rgba(255, 255, 255, 0.95),
+    0 0 12px rgba(245, 158, 11, 0.55);
+  transform: translateX(0px); /* Light mode thumb sits on the left over sun */
+}
+
+:root[data-theme="light"] .neumorphic-theme-switch:hover .neumorphic-switch-thumb,
+.neumorphic-theme-switch.is-light:hover .neumorphic-switch-thumb {
+  transform: translateX(0px) scale(1.08);
+  box-shadow: 
+    2px 2px 6px rgba(0, 0, 0, 0.2),
+    -2px -2px 5px rgba(255, 255, 255, 1),
+    0 0 18px rgba(245, 158, 11, 0.7);
+}
+
+:root[data-theme="light"] .neumorphic-theme-switch:active .neumorphic-switch-thumb,
+.neumorphic-theme-switch.is-light:active .neumorphic-switch-thumb {
+  transform: translateX(0px) scale(0.92);
+}
+
+/* Backward compatibility alias */
+.theme-quick-toggle-btn {
+  display: inline-flex;
 }
 
 /* ── 4.2 Glassmorphic Sliding Sidebar Drawer ────────────────── */
@@ -5368,7 +5469,7 @@ body.is-android .fullscreen-btn,
    ============================================================ */
 .top30-modal {
   width: 95%;
-  max-width: 680px;
+  max-width: 860px;
   max-height: 88vh;
   display: flex;
   flex-direction: column;
@@ -5644,12 +5745,143 @@ body.is-android .fullscreen-btn,
   margin-left: 3px;
 }
 
-/* ── Scrollable Leaderboard Table ── */
+/* ── Free Leaderboard Registration Card ── */
+.top30-reg-card {
+  margin: 10px 0 16px;
+  padding: 14px 18px;
+  border-radius: var(--r-lg);
+  background: rgba(14, 20, 32, 0.65);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s var(--ease);
+}
+
+:root[data-theme="light"] .top30-reg-card {
+  background: #f8fafc;
+  border-color: rgba(5, 150, 105, 0.28);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.top30-reg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.reg-title-wrap {
+  flex: 1;
+  min-width: 220px;
+}
+
+.reg-badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #34d399;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+:root[data-theme="light"] .reg-badge {
+  color: #059669;
+}
+
+.reg-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.top30-reg-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  animation: fadeIn 0.25s var(--ease);
+}
+
+:root[data-theme="light"] .top30-reg-form {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.reg-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.reg-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.reg-avatar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-mini-picker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 2px;
+}
+
+.avatar-choice {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  transition: all 0.2s var(--ease);
+}
+
+.avatar-choice:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.1);
+}
+
+.avatar-choice.selected {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: var(--accent-emerald);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.45);
+  transform: scale(1.12);
+}
+
+.profile-geo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+@media (max-width: 540px) {
+  .profile-geo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Scrollable Leaderboard Table with 6 Clean Columns ── */
 .top30-table-wrap {
   flex: 1;
   min-height: 240px;
-  max-height: 360px;
+  max-height: 380px;
+  overflow-x: auto;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--r-md);
   border: 1px solid var(--stroke-soft);
   background: rgba(5, 8, 14, 0.65);
@@ -5660,11 +5892,18 @@ body.is-android .fullscreen-btn,
   border-color: rgba(0, 0, 0, 0.08);
 }
 
+.top30-table-inner {
+  min-width: 680px;
+  width: 100%;
+}
+
 .top30-table-head-row {
-  display: flex;
+  display: grid !important;
+  grid-template-columns: 56px minmax(130px, 1.4fr) minmax(115px, 1.1fr) minmax(95px, 0.9fr) minmax(90px, 0.85fr) minmax(115px, 1.1fr) !important;
   align-items: center;
-  padding: 8px 14px;
-  background: rgba(12, 18, 28, 0.95);
+  gap: 10px;
+  padding: 9px 14px;
+  background: rgba(12, 18, 28, 0.96);
   border-bottom: 1px solid var(--stroke-soft);
   font-size: 0.68rem;
   font-weight: 800;
@@ -5682,28 +5921,69 @@ body.is-android .fullscreen-btn,
 }
 
 .col-rank {
-  width: 72px;
-  flex-shrink: 0;
+  width: auto;
 }
 
 .col-user {
-  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
 }
 
-.col-streak {
-  width: 90px;
-  text-align: center;
-  flex-shrink: 0;
+.col-hours {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent-emerald);
+  white-space: nowrap;
 }
 
-.col-time {
-  width: 96px;
-  text-align: right;
-  flex-shrink: 0;
+:root[data-theme="light"] .col-hours {
+  color: #059669;
+}
+
+.col-city,
+.col-state {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-dim);
+}
+
+.col-country {
+  display: flex;
+  align-items: center;
+}
+
+.top30-country-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-full);
+  padding: 2px 8px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:root[data-theme="light"] .top30-country-pill {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #475569;
+}
+
+.top30-geo-val {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top30-rows-list {
@@ -5713,8 +5993,10 @@ body.is-android .fullscreen-btn,
 }
 
 .top30-row {
-  display: flex;
+  display: grid !important;
+  grid-template-columns: 56px minmax(130px, 1.4fr) minmax(115px, 1.1fr) minmax(95px, 0.9fr) minmax(90px, 0.85fr) minmax(115px, 1.1fr) !important;
   align-items: center;
+  gap: 10px;
   padding: 9px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   font-size: 0.82rem;
@@ -5734,12 +6016,12 @@ body.is-android .fullscreen-btn,
 }
 
 .top30-row.is-me {
-  background: rgba(16, 185, 129, 0.12) !important;
+  background: rgba(16, 185, 129, 0.14) !important;
   border-left: 3px solid var(--accent-emerald);
 }
 
 :root[data-theme="light"] .top30-row.is-me {
-  background: rgba(5, 150, 105, 0.08) !important;
+  background: rgba(5, 150, 105, 0.09) !important;
   border-left: 3px solid #059669;
 }
 
