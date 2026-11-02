@@ -2934,6 +2934,9 @@ const UI = (() => {
         if (e.code === 'Space') { e.preventDefault(); const btn = $('#btnStartPause'); if (btn) btn.click(); }
         if (e.key === 'r' || e.key === 'R') Timer.reset();
         if (e.key === 's' || e.key === 'S') Timer.skip();
+        if ((e.key === 'h' || e.key === 'H') && (e.altKey || e.metaKey)) {
+          window.location.href = 'https://fixeehub.com';
+        }
       });
 
       // title sync

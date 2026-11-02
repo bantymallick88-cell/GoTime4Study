@@ -614,6 +614,133 @@ header,
   line-height: 1;
 }
 
+/* ── 4.1.1b Ecosystem Fixee Hub Workspace Back Navigation ── */
+.header-hub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-full);
+  background: var(--bg-card-strong) !important;
+  border: 1px solid var(--stroke-soft) !important;
+  color: var(--text-dim) !important;
+  text-decoration: none !important;
+  font-size: 0.76rem !important;
+  font-weight: 600 !important;
+  transition: all 0.25s var(--ease) !important;
+  flex-shrink: 0;
+  order: 3;
+}
+
+.header-hub-btn:hover {
+  background: #262833 !important;
+  border-color: #38BDF8 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25) !important;
+  transform: translateY(-1px) scale(1.02);
+}
+
+.header-hub-btn .hub-icon {
+  color: #38BDF8;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.header-hub-btn .hub-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.header-hub-btn .hub-arrow {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.header-hub-btn:hover .hub-arrow {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
+
+@media (max-width: 640px) {
+  .header-hub-btn {
+    padding: 6px 8px;
+  }
+  .header-hub-btn .hub-label {
+    display: none;
+  }
+}
+
+/* Sidebar Ecosystem Hub Card */
+.sidebar-hub-wrap {
+  padding: 10px 16px 4px;
+}
+
+.sidebar-hub-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  text-decoration: none;
+  transition: all 0.25s var(--ease);
+}
+
+.sidebar-hub-card:hover {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.2);
+  transform: translateY(-1px);
+}
+
+.shub-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.shub-icon {
+  font-size: 1.15rem;
+  color: #38BDF8;
+  flex-shrink: 0;
+}
+
+.shub-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.shub-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.shub-sub {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shub-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: var(--r-full);
+  background: #38BDF8;
+  color: #000000;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
 /* ── 4.1.2 Neumorphic / Soft-UI Aesthetic Theme Switch (Emerald 🌿 / OLED 🌑) ── */
 .neumorphic-theme-switch {
   display: inline-flex;

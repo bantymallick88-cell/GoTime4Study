@@ -1,6 +1,6 @@
 # GoTime4Study Robots.txt
 # Futuristic Aesthetic SaaS Study Tracker & Pomodoro Focus Timer
-# https://gotime4study.com/
+# https://time4study.fixeehub.com/
 
 User-agent: *
 Allow: /
@@ -12,4 +12,4 @@ Disallow: /404.html
 Disallow: /500.html
 
 # Sitemap Location
-Sitemap: https://gotime4study.com/sitemap.xml
+Sitemap: https://time4study.fixeehub.com/sitemap.xml

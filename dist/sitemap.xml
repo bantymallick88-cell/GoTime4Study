@@ -2,15 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Home / Focus Dashboard -->
   <url>
-    <loc>https://gotime4study.com/</loc>
-    <lastmod>2026-10-05</lastmod>
+    <loc>https://time4study.fixeehub.com/</loc>
+    <lastmod>2026-11-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <!-- Privacy Policy -->
   <url>
-    <loc>https://gotime4study.com/privacy.html</loc>
-    <lastmod>2026-10-05</lastmod>
+    <loc>https://time4study.fixeehub.com/privacy.html</loc>
+    <lastmod>2026-11-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

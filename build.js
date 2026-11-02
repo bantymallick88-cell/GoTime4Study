@@ -18,7 +18,8 @@ const filesToCopy = [
   '500.html',
   'privacy.html',
   'package.json',
-  'wrangler.jsonc'
+  'wrangler.jsonc',
+  '_headers'
 ];
 
 let copied = 0;
