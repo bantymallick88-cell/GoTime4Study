@@ -188,13 +188,13 @@
           </button>
         </div>
 
-        <!-- Neumorphic / Soft-UI Aesthetic Theme Toggle Switch (Sun/Moon with smooth sliding transition) -->
-        <button id="themeToggleBtn" class="neumorphic-theme-switch header-extreme-right-btn" role="switch" aria-checked="false" aria-label="Toggle Dark / Light Theme" title="Toggle Dark / Light Theme">
+        <!-- Neumorphic Theme Switch: Mode A (Emerald Dark 🌿) vs Mode B (Aesthetic OLED Pitch-Dark 🌑) -->
+        <button id="themeToggleBtn" class="neumorphic-theme-switch header-extreme-right-btn" role="switch" aria-checked="false" aria-label="Toggle Emerald Dark / OLED Pitch-Dark Theme" title="Toggle Emerald Dark / OLED Pitch-Dark Theme">
           <span class="neumorphic-switch-track">
-            <span class="switch-icon-bg sun-icon-bg" aria-hidden="true">☀️</span>
-            <span class="switch-icon-bg moon-icon-bg" aria-hidden="true">🌙</span>
+            <span class="switch-icon-bg mode-a-icon-bg" aria-hidden="true" title="Emerald Dark">🌿</span>
+            <span class="switch-icon-bg mode-b-icon-bg" aria-hidden="true" title="OLED Pitch-Dark">🌑</span>
             <span class="neumorphic-switch-thumb">
-              <span class="thumb-icon" id="headerThemeToggleIcon">🌙</span>
+              <span class="thumb-icon" id="headerThemeToggleIcon">🌿</span>
             </span>
           </span>
         </button>
@@ -227,9 +227,9 @@
             <span class="sq-icon" id="sidebarSoundIcon">🔊</span>
             <span class="sq-label" id="sidebarSoundLabel">Audio</span>
           </button>
-          <button id="btnSidebarTheme" class="sidebar-quick-btn" title="Cycle Dashboard Theme (🌙)">
-            <span class="sq-icon">🌙</span>
-            <span class="sq-label">Theme</span>
+          <button id="btnSidebarTheme" class="sidebar-quick-btn" title="Toggle Theme (Emerald Dark 🌿 / OLED Pitch-Dark 🌑)">
+            <span class="sq-icon" id="sidebarThemeIcon">🌿</span>
+            <span class="sq-label" id="sidebarThemeLabel">Theme</span>
           </button>
           <button id="btnSidebarSettings" class="sidebar-quick-btn" title="Timer & Sound Settings (⚙️)">
             <span class="sq-icon">⚙️</span>

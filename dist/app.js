@@ -2453,17 +2453,23 @@ const UI = (() => {
   }
 
   function applyTheme(t) {
-    const isLight = (t === 'light' || t === 'light-mode');
-    const theme = isLight ? 'light' : 'dark';
+    // Light mode is completely removed. Ensure only 2 dark theme options:
+    // Mode A: Emerald Dark ('dark') vs Mode B: Aesthetic Ultra-Dark Pure OLED ('oled')
+    let theme = (t === 'oled' || t === 'pitch' || t === 'pitch-black' || t === 'ultra-dark') ? 'oled' : 'dark';
+    const isOled = (theme === 'oled');
 
-    if (isLight) {
-      document.body.classList.add('light-mode');
-      document.body.classList.add('light-theme');
+    // Remove legacy light classes completely
+    document.body.classList.remove('light-mode', 'light-theme');
+
+    if (isOled) {
+      document.body.classList.add('oled-theme', 'theme-oled');
+      document.body.classList.remove('emerald-theme');
+      document.documentElement.dataset.theme = 'oled';
     } else {
-      document.body.classList.remove('light-mode');
-      document.body.classList.remove('light-theme');
+      document.body.classList.add('emerald-theme');
+      document.body.classList.remove('oled-theme', 'theme-oled');
+      document.documentElement.dataset.theme = 'dark';
     }
-    document.documentElement.dataset.theme = theme;
 
     try {
       localStorage.setItem('themePreference', theme);
@@ -2474,17 +2480,21 @@ const UI = (() => {
 
     const headerIcon = $('#headerThemeToggleIcon');
     const headerBtn = document.getElementById('themeToggleBtn') || $('#btnHeaderThemeToggle');
-    if (headerIcon) headerIcon.textContent = isLight ? '☀️' : '🌙';
+    if (headerIcon) headerIcon.textContent = isOled ? '🌑' : '🌿';
     if (headerBtn) {
-      headerBtn.classList.toggle('is-light', isLight);
-      headerBtn.setAttribute('aria-checked', isLight ? 'true' : 'false');
-      headerBtn.setAttribute('title', isLight ? 'Switch to Dark Mode (🌙)' : 'Switch to Light Mode (☀️)');
+      headerBtn.classList.toggle('is-oled', isOled);
+      headerBtn.classList.remove('is-light');
+      headerBtn.setAttribute('aria-checked', isOled ? 'true' : 'false');
+      headerBtn.setAttribute('title', isOled ? 'Switch to Emerald Dark Theme (🌿)' : 'Switch to Ultra-Dark OLED Theme (🌑)');
     }
 
     const btn = $('#btnTheme');
-    if (btn) btn.innerHTML = `<span>${isLight ? '🌙' : '☀️'}</span><small class="btn-caption">Theme</small>`;
+    if (btn) btn.innerHTML = `<span>${isOled ? '🌑' : '🌿'}</span><small class="btn-caption">${isOled ? 'OLED' : 'Emerald'}</small>`;
     const btnSidebarTheme = $('#btnSidebarTheme');
-    if (btnSidebarTheme) btnSidebarTheme.innerHTML = `<span class="sq-icon">${isLight ? '🌙' : '☀️'}</span><span class="sq-label">Theme</span>`;
+    if (btnSidebarTheme) {
+      btnSidebarTheme.innerHTML = `<span class="sq-icon">${isOled ? '🌑' : '🌿'}</span><span class="sq-label">${isOled ? 'OLED Dark' : 'Emerald Dark'}</span>`;
+      btnSidebarTheme.setAttribute('title', isOled ? 'Switch to Emerald Dark Theme (🌿)' : 'Switch to Ultra-Dark OLED Theme (🌑)');
+    }
 
     if (typeof Chart !== 'undefined' && typeof Stats !== 'undefined' && Stats.draw) Stats.draw();
   }
@@ -2593,23 +2603,28 @@ const UI = (() => {
 
   return {
     init() {
-      // Theme preference in LocalStorage (theme / themePreference)
+      // Theme preference in LocalStorage (Emerald Dark vs OLED Pitch-Dark)
       let initialTheme = 'dark';
       try {
-        initialTheme = localStorage.getItem('theme') || localStorage.getItem('themePreference') || Store.d.theme || 'dark';
+        const stored = localStorage.getItem('theme') || localStorage.getItem('themePreference') || Store.d.theme;
+        if (stored === 'oled' || stored === 'pitch' || stored === 'ultra-dark' || stored === 'pitch-black') {
+          initialTheme = 'oled';
+        } else {
+          initialTheme = 'dark';
+        }
       } catch {
-        initialTheme = Store.d.theme || 'dark';
+        initialTheme = Store.d.theme === 'oled' ? 'oled' : 'dark';
       }
       applyTheme(initialTheme);
 
-      // Explicit addEventListener('click') on #themeToggleBtn
+      // Explicit addEventListener('click') on #themeToggleBtn: toggles Emerald Dark vs OLED Pitch-Dark
       const themeToggleBtn = document.getElementById('themeToggleBtn') || document.getElementById('btnHeaderThemeToggle');
       if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
-          const isCurrentLight = document.documentElement.dataset.theme === 'light' || document.body.classList.contains('light-mode');
-          const nextTheme = isCurrentLight ? 'dark' : 'light';
+          const isCurrentOled = document.documentElement.dataset.theme === 'oled' || document.body.classList.contains('theme-oled');
+          const nextTheme = isCurrentOled ? 'dark' : 'oled';
           applyTheme(nextTheme);
-          toast(`Switched to ${nextTheme === 'light' ? 'Light (Day) ☀️' : 'Dark (Night) 🌙'} Mode`, 'good');
+          toast(nextTheme === 'oled' ? 'Switched to Aesthetic Ultra-Dark OLED 🌑' : 'Switched to Emerald Dark Theme 🌿', 'good');
         });
       }
 
