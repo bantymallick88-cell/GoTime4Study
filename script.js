@@ -701,6 +701,9 @@ const Timer = (() => {
     if (card) card.classList.remove('running');
     if (MODES[mode].kind === 'focus') {
       Store.addFocus(total); Stats.refresh(); Badges.check();
+      if (typeof Top30Leaderboard !== 'undefined' && Top30Leaderboard.syncAndRender) {
+        Top30Leaderboard.syncAndRender();
+      }
       Store.addSessionCount();
       if (mode === 'custom') Chime.customComplete(); else Chime.sessionEnd();
       toast(`${MODES[mode].label} complete! 🎉`, 'good');
@@ -1400,6 +1403,9 @@ const Stats = (() => {
         },
       });
     },
+    totals,
+    streak,
+    series,
     setRange(r) { range = r; this.draw(); },
   };
 })();
@@ -3467,56 +3473,37 @@ const AIStudyAnalytics = (() => {
    ════════════════════════════════════════════════════════════ */
 const Top30Leaderboard = (() => {
   let activeScope = 'week'; // 'week' or 'month'
-  const REGISTRY_KEY = 'gt4s_dynamic_top30_registry_v2';
+  const REGISTRY_KEY = 'gt4s_real_sadhaks_v3';
 
-  // Dynamic active focus learners pool
-  const SEED_LEARNERS = [
-    { id: 'usr_aarav', name: 'Aarav Sharma', avatar: '👨‍🎓', weekMinutes: 2310, monthMinutes: 9240, streak: 28, city: 'New Delhi', state: 'Delhi', country: 'India 🇮🇳' },
-    { id: 'usr_elena', name: 'Elena Rostova', avatar: '👩‍💻', weekMinutes: 2112, monthMinutes: 8490, streak: 21, city: 'Munich', state: 'Bavaria', country: 'Germany 🇩🇪' },
-    { id: 'usr_liam', name: 'Liam Chen', avatar: '⚡', weekMinutes: 2028, monthMinutes: 8100, streak: 26, city: 'Taipei', state: 'Northern', country: 'Taiwan 🇹🇼' },
-    { id: 'usr_sophia', name: 'Sophia Patel', avatar: '📚', weekMinutes: 1884, monthMinutes: 7560, streak: 19, city: 'London', state: 'England', country: 'United Kingdom 🇬🇧' },
-    { id: 'usr_kenji', name: 'Kenji Takahashi', avatar: '🎯', weekMinutes: 1776, monthMinutes: 7110, streak: 17, city: 'Tokyo', state: 'Kanto', country: 'Japan 🇯🇵' },
-    { id: 'usr_maya', name: 'Maya Lin', avatar: '🌸', weekMinutes: 1680, monthMinutes: 6720, streak: 23, city: 'Singapore', state: 'Central', country: 'Singapore 🇸🇬' },
-    { id: 'usr_marcus', name: 'Marcus Thorne', avatar: '☕', weekMinutes: 1590, monthMinutes: 6360, streak: 15, city: 'Seattle', state: 'Washington', country: 'United States 🇺🇸' },
-    { id: 'usr_ananya', name: 'Ananya Roy', avatar: '🎨', weekMinutes: 1506, monthMinutes: 6030, streak: 14, city: 'Kolkata', state: 'West Bengal', country: 'India 🇮🇳' },
-    { id: 'usr_lucas', name: 'Lucas Dubois', avatar: '🚀', weekMinutes: 1428, monthMinutes: 5712, streak: 18, city: 'Paris', state: 'Île-de-France', country: 'France 🇫🇷' },
-    { id: 'usr_zara', name: 'Zara Al-Mansoor', avatar: '✨', weekMinutes: 1344, monthMinutes: 5376, streak: 12, city: 'Dubai', state: 'Dubai', country: 'United Arab Emirates 🇦🇪' },
-    { id: 'usr_devon', name: 'Devon Vance', avatar: '🎧', weekMinutes: 1260, monthMinutes: 5040, streak: 16, city: 'Toronto', state: 'Ontario', country: 'Canada 🇨🇦' },
-    { id: 'usr_chiara', name: 'Chiara Rossi', avatar: '🌿', weekMinutes: 1170, monthMinutes: 4680, streak: 11, city: 'Milan', state: 'Lombardy', country: 'Italy 🇮🇹' },
-    { id: 'usr_ethan', name: 'Ethan Walker', avatar: '🔥', weekMinutes: 1092, monthMinutes: 4368, streak: 13, city: 'Melbourne', state: 'Victoria', country: 'Australia 🇦🇺' },
-    { id: 'usr_priya', name: 'Priya Nair', avatar: '🪐', weekMinutes: 1020, monthMinutes: 4080, streak: 10, city: 'Bengaluru', state: 'Karnataka', country: 'India 🇮🇳' },
-    { id: 'usr_mateo', name: 'Mateo Hernandez', avatar: '💻', weekMinutes: 948, monthMinutes: 3792, streak: 9, city: 'Madrid', state: 'Community of Madrid', country: 'Spain 🇪🇸' },
-    { id: 'usr_chloe', name: 'Chloe Dupont', avatar: '📖', weekMinutes: 870, monthMinutes: 3480, streak: 14, city: 'Lyon', state: 'Auvergne-Rhône-Alpes', country: 'France 🇫🇷' },
-    { id: 'usr_rohan', name: 'Rohan Mehra', avatar: '🧠', weekMinutes: 792, monthMinutes: 3168, streak: 8, city: 'Mumbai', state: 'Maharashtra', country: 'India 🇮🇳' },
-    { id: 'usr_emma', name: 'Emma Watson', avatar: '🕊️', weekMinutes: 720, monthMinutes: 2880, streak: 7, city: 'Oxford', state: 'Oxfordshire', country: 'United Kingdom 🇬🇧' },
-    { id: 'usr_hiroshi', name: 'Hiroshi Sato', avatar: '🏹', weekMinutes: 666, monthMinutes: 2664, streak: 6, city: 'Osaka', state: 'Kansai', country: 'Japan 🇯🇵' },
-    { id: 'usr_ingrid', name: 'Ingrid Berg', avatar: '❄️', weekMinutes: 600, monthMinutes: 2400, streak: 9, city: 'Oslo', state: 'Østlandet', country: 'Norway 🇳🇴' },
-    { id: 'usr_noah', name: 'Noah Becker', avatar: '⚙️', weekMinutes: 552, monthMinutes: 2208, streak: 5, city: 'Berlin', state: 'Berlin', country: 'Germany 🇩🇪' },
-    { id: 'usr_fatima', name: 'Fatima Zahra', avatar: '🌙', weekMinutes: 504, monthMinutes: 2016, streak: 6, city: 'Cairo', state: 'Cairo Governorate', country: 'Egypt 🇪🇬' },
-    { id: 'usr_gabriel', name: 'Gabriel Silva', avatar: '🌊', weekMinutes: 450, monthMinutes: 1800, streak: 4, city: 'São Paulo', state: 'São Paulo', country: 'Brazil 🇧🇷' },
-    { id: 'usr_sunita', name: 'Sunita Rao', avatar: '⭐', weekMinutes: 408, monthMinutes: 1632, streak: 5, city: 'Hyderabad', state: 'Telangana', country: 'India 🇮🇳' },
-    { id: 'usr_felix', name: 'Felix Müller', avatar: '🦊', weekMinutes: 360, monthMinutes: 1440, streak: 3, city: 'Zurich', state: 'Zurich', country: 'Switzerland 🇨🇭' },
-    { id: 'usr_hanna', name: 'Hanna Lindqvist', avatar: '🌲', weekMinutes: 312, monthMinutes: 1248, streak: 4, city: 'Stockholm', state: 'Stockholm County', country: 'Sweden 🇸🇪' },
-    { id: 'usr_tariq', name: 'Tariq Aziz', avatar: '🦅', weekMinutes: 270, monthMinutes: 1080, streak: 3, city: 'Istanbul', state: 'Marmara', country: 'Turkey 🇹🇷' },
-    { id: 'usr_meiling', name: 'Mei-Ling Wang', avatar: '🎋', weekMinutes: 228, monthMinutes: 912, streak: 2, city: 'Seoul', state: 'Seoul Capital', country: 'South Korea 🇰🇷' },
-    { id: 'usr_oliver', name: 'Oliver Smith', avatar: '🧭', weekMinutes: 186, monthMinutes: 744, streak: 2, city: 'Boston', state: 'Massachusetts', country: 'United States 🇺🇸' },
-  ];
+  // Purge legacy mock data registries so no dummy users linger in localStorage
+  try {
+    localStorage.removeItem('gt4s_dynamic_top30_registry_v2');
+    localStorage.removeItem('gt4s_top30_registry');
+    localStorage.removeItem('gt4s_top30_seed_registry');
+    localStorage.removeItem('gt4s_top30_mock_data');
+  } catch {}
 
   function loadRegistry() {
     try {
       const raw = localStorage.getItem(REGISTRY_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length >= 20) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.filter((u) => u && u.name && u.city && u.country && !u.isMock);
+        }
       }
     } catch {}
-    saveRegistry(SEED_LEARNERS);
-    return structuredClone(SEED_LEARNERS);
+    return [];
   }
 
   function saveRegistry(list) {
     try {
       localStorage.setItem(REGISTRY_KEY, JSON.stringify(list));
+      if (typeof BroadcastChannel !== 'undefined') {
+        const ch = new BroadcastChannel('gt4s_leaderboard_channel');
+        ch.postMessage({ type: 'SYNC_REGISTRY', timestamp: Date.now() });
+        ch.close();
+      }
     } catch {}
   }
 
@@ -3529,67 +3516,99 @@ const Top30Leaderboard = (() => {
     return Boolean(name && name !== 'FocusMaster' && country && state && city);
   }
 
+  function syncCurrentUserToRegistry() {
+    if (!isProfileComplete()) return;
+    const profile = Store.d.profile || {};
+    const totals = (typeof Stats !== 'undefined' && Stats.totals) ? Stats.totals() : { week: 0, month: 0, all: 0 };
+    const streakDays = (typeof Stats !== 'undefined' && Stats.streak) ? (Stats.streak() || 1) : 1;
+    const totalMins = totals.all || 0;
+
+    // The leaderboard strictly tracks actual users who register AND log real focus sessions
+    if (totalMins <= 0 && (!totals.week || totals.week <= 0)) return;
+
+    const registry = loadRegistry();
+    const userName = (profile.name || profile.nick || '').trim();
+    const userKey = 'usr_' + userName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+    const existingIdx = registry.findIndex((u) => u.id === userKey || u.id === 'local_me' || u.name === userName);
+    const entry = {
+      id: userKey,
+      name: userName,
+      nick: userName,
+      avatar: profile.avatar || '🦉',
+      city: (profile.city || '').trim(),
+      state: (profile.state || '').trim(),
+      country: (profile.country || '').trim(),
+      weekMinutes: totals.week || 0,
+      monthMinutes: totals.month || 0,
+      totalMinutes: totalMins,
+      streak: Math.max(streakDays, 1),
+      updatedAt: Date.now(),
+    };
+
+    if (existingIdx >= 0) {
+      registry[existingIdx] = { ...registry[existingIdx], ...entry };
+    } else {
+      registry.push(entry);
+    }
+
+    saveRegistry(registry);
+  }
+
   function getCombinedList() {
+    syncCurrentUserToRegistry();
     const registry = loadRegistry();
     const profile = Store.d.profile || {};
     const hasProfile = isProfileComplete();
 
-    const userNick = (profile.name && profile.name.trim())
-      ? profile.name.trim()
-      : ((profile.nick && profile.nick.trim()) ? profile.nick.trim() : 'FocusMaster');
-    const userAvatar = profile.avatar || '🦉';
-    const userCity = (profile.city && profile.city.trim()) ? profile.city.trim() : 'San Francisco';
-    const userState = (profile.state && profile.state.trim()) ? profile.state.trim() : 'California';
-    const userCountry = (profile.country && profile.country.trim()) ? profile.country.trim() : 'United States 🇺🇸';
-
-    // Dynamic real-time focus aggregation from Store.d.sessions
     const totals = (typeof Stats !== 'undefined' && Stats.totals) ? Stats.totals() : { week: 0, month: 0, all: 0 };
     const streakDays = (typeof Stats !== 'undefined' && Stats.streak) ? (Stats.streak() || 1) : 1;
-
     const realWeekMinutes = totals.week || 0;
     const realMonthMinutes = totals.month || 0;
+    const userHours = (activeScope === 'month' ? realMonthMinutes : realWeekMinutes) / 60;
 
-    const peers = registry.filter((p) => p.id !== 'local_me');
+    const userName = (profile.name || profile.nick || '').trim();
+    const userKey = 'usr_' + userName.toLowerCase().replace(/[^a-z0-9]/g, '_');
 
-    const userEntry = {
-      id: 'local_me',
-      isMe: true,
-      name: userNick,
-      nick: userNick,
-      avatar: userAvatar,
-      city: userCity,
-      state: userState,
-      country: userCountry,
-      weekMinutes: realWeekMinutes,
-      monthMinutes: realMonthMinutes,
-      weekHours: realWeekMinutes / 60,
-      monthHours: realMonthMinutes / 60,
-      streak: Math.max(streakDays, 1),
-      hasCompletedProfile: hasProfile,
-    };
+    // Filter registry to prevent duplicates of current user
+    const peers = registry.filter((p) => p.id !== 'local_me' && p.id !== userKey && p.name !== userName);
 
     const allEntries = peers.map((p) => {
       const wMins = Number(p.weekMinutes) || 0;
       const mMins = Number(p.monthMinutes) || 0;
+      const hrs = (activeScope === 'month' ? mMins : wMins) / 60;
       return {
         ...p,
         isMe: false,
         nick: p.name || p.nick,
-        weekHours: wMins / 60,
-        monthHours: mMins / 60,
-        hours: (activeScope === 'month' ? mMins : wMins) / 60,
+        hours: hrs,
       };
-    });
+    }).filter((p) => p.hours > 0);
 
-    userEntry.hours = (activeScope === 'month' ? realMonthMinutes : realWeekMinutes) / 60;
-    allEntries.push(userEntry);
+    // Only include local user if they have completed profile AND logged focus time
+    if (hasProfile && (userHours > 0 || (totals.all && totals.all > 0))) {
+      allEntries.push({
+        id: userKey,
+        isMe: true,
+        name: userName,
+        nick: userName,
+        avatar: profile.avatar || '🦉',
+        city: (profile.city || '').trim(),
+        state: (profile.state || '').trim(),
+        country: (profile.country || '').trim(),
+        weekMinutes: realWeekMinutes,
+        monthMinutes: realMonthMinutes,
+        hours: userHours,
+        streak: Math.max(streakDays, 1),
+        hasCompletedProfile: true,
+      });
+    }
 
-    const ranked = allEntries.map((item) => ({
-      ...item,
-      hours: Math.max(0, item.hours),
-    })).sort((a, b) => b.hours - a.hours);
+    const ranked = allEntries
+      .sort((a, b) => b.hours - a.hours)
+      .slice(0, 30);
 
-    return ranked.slice(0, 30);
+    return ranked;
   }
 
   function render() {
@@ -3600,31 +3619,71 @@ const Top30Leaderboard = (() => {
 
     const ranked = getCombinedList();
     const myRankIdx = ranked.findIndex((r) => r.isMe);
-    const myRank = myRankIdx >= 0 ? (myRankIdx + 1) : '>30';
+    const myRank = myRankIdx >= 0 ? `#${myRankIdx + 1}` : 'Unranked';
     const myItem = myRankIdx >= 0 ? ranked[myRankIdx] : null;
     const myHours = myItem ? myItem.hours : 0;
     const myStreak = myItem ? myItem.streak : 1;
     const profile = Store.d.profile || {};
-    const myCity = myItem ? myItem.city : (profile.city || 'San Francisco');
-    const myCountry = myItem ? myItem.country : (profile.country || 'United States 🇺🇸');
+    const hasProfile = isProfileComplete();
 
     if (mySummaryEl) {
-      mySummaryEl.innerHTML = `
-        <span class="my-rank-badge">Your Rank: <b>#${myRank}</b></span>
-        <span>·</span>
-        <span class="my-rank-stat">${myHours.toFixed(1)} hrs Focus</span>
-        <span>·</span>
-        <span class="my-rank-loc" title="${esc(myCity)}, ${esc(myCountry)}">📍 ${esc(myCity)}, ${esc(myCountry)}</span>
-        <span>·</span>
-        <span class="my-rank-streak">${myStreak}🔥 Streak</span>
-      `;
+      if (myItem) {
+        mySummaryEl.innerHTML = `
+          <span class="my-rank-badge">Your Rank: <b>${myRank}</b></span>
+          <span>·</span>
+          <span class="my-rank-stat">${myHours.toFixed(1)} hrs Focus</span>
+          <span>·</span>
+          <span class="my-rank-loc" title="${esc(myItem.city)}, ${esc(myItem.country)}">📍 ${esc(myItem.city)}, ${esc(myItem.country)}</span>
+          <span>·</span>
+          <span class="my-rank-streak">${myStreak}🔥 Streak</span>
+        `;
+      } else if (hasProfile) {
+        mySummaryEl.innerHTML = `
+          <span class="my-rank-badge">Registered: <b>${esc(profile.name || profile.nick)}</b></span>
+          <span>·</span>
+          <span class="my-rank-stat">0.0 hrs</span>
+          <span>·</span>
+          <span class="my-rank-loc">📍 ${esc(profile.city)}, ${esc(profile.country)}</span>
+          <span>·</span>
+          <span class="my-rank-sub">Start timer to log focus time & claim your rank! ⏱️</span>
+        `;
+      } else {
+        mySummaryEl.innerHTML = `
+          <span class="my-rank-badge">Unranked</span>
+          <span>·</span>
+          <span class="my-rank-sub">Register & log focus time to appear on the leaderboard! 🏆</span>
+        `;
+      }
     }
 
-    if (podiumEl && ranked.length >= 3) {
-      const top1 = ranked[0];
-      const top2 = ranked[1];
-      const top3 = ranked[2];
+    // Elegant empty state when no active sadhaks exist on the leaderboard yet
+    if (ranked.length === 0) {
+      if (podiumEl) {
+        podiumEl.innerHTML = '';
+        podiumEl.style.display = 'none';
+      }
+      listEl.innerHTML = `
+        <li class="top30-empty-state">
+          <div class="empty-state-icon">🧘‍♂️</div>
+          <div class="empty-state-title">No active sadhaks on the leaderboard yet.</div>
+          <div class="empty-state-sub">Be the first to log focus time!</div>
+          <button type="button" class="btn-empty-start" id="btnEmptyStateStart">Start Focus Session ⏱️</button>
+        </li>
+      `;
+      const btnEmptyStart = document.getElementById('btnEmptyStateStart');
+      if (btnEmptyStart) {
+        btnEmptyStart.addEventListener('click', (e) => {
+          e.preventDefault();
+          close();
+          const startBtn = document.getElementById('btnStartPause');
+          if (startBtn) startBtn.click();
+        });
+      }
+      return;
+    }
 
+    if (podiumEl) {
+      podiumEl.style.display = 'flex';
       const renderPodiumCol = (item, rankNum, medal, badgeClass, pillarClass) => `
         <div class="podium-col ${item.isMe ? 'is-me' : ''}">
           ${rankNum === 1 ? '<div class="podium-crown">👑</div>' : ''}
@@ -3637,11 +3696,22 @@ const Top30Leaderboard = (() => {
         </div>
       `;
 
-      podiumEl.innerHTML = `
-        ${renderPodiumCol(top2, 2, 'SILVER', 'badge-silver', 'pillar-2')}
-        ${renderPodiumCol(top1, 1, 'GOLD', 'badge-gold', 'pillar-1')}
-        ${renderPodiumCol(top3, 3, 'BRONZE', 'badge-bronze', 'pillar-3')}
-      `;
+      if (ranked.length >= 3) {
+        podiumEl.innerHTML = `
+          ${renderPodiumCol(ranked[1], 2, 'SILVER', 'badge-silver', 'pillar-2')}
+          ${renderPodiumCol(ranked[0], 1, 'GOLD', 'badge-gold', 'pillar-1')}
+          ${renderPodiumCol(ranked[2], 3, 'BRONZE', 'badge-bronze', 'pillar-3')}
+        `;
+      } else if (ranked.length === 2) {
+        podiumEl.innerHTML = `
+          ${renderPodiumCol(ranked[1], 2, 'SILVER', 'badge-silver', 'pillar-2')}
+          ${renderPodiumCol(ranked[0], 1, 'GOLD', 'badge-gold', 'pillar-1')}
+        `;
+      } else if (ranked.length === 1) {
+        podiumEl.innerHTML = `
+          ${renderPodiumCol(ranked[0], 1, 'GOLD', 'badge-gold', 'pillar-1')}
+        `;
+      }
     }
 
     listEl.innerHTML = ranked.map((student, idx) => {
@@ -4072,6 +4142,23 @@ const Top30Leaderboard = (() => {
       }
     });
 
+    // Cross-tab real-time sync for leaderboard entries
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('gt4s_leaderboard_channel');
+        bc.onmessage = (ev) => {
+          if (ev.data && ev.data.type === 'SYNC_REGISTRY') {
+            render();
+          }
+        };
+      }
+      window.addEventListener('storage', (e) => {
+        if (e.key === REGISTRY_KEY) {
+          render();
+        }
+      });
+    } catch {}
+
     render();
   }
 
@@ -4084,6 +4171,11 @@ const Top30Leaderboard = (() => {
     isProfileComplete,
     openOnboardingModal,
     closeOnboardingModal,
+    syncUser: syncCurrentUserToRegistry,
+    syncAndRender: () => {
+      syncCurrentUserToRegistry();
+      render();
+    },
   };
 })();
 

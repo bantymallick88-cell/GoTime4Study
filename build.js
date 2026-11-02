@@ -32,3 +32,4 @@ filesToCopy.forEach((file) => {
 });
 
 console.log(`[GoTime4Study Build] Successfully synced ${copied} production assets to dist/`);
+
