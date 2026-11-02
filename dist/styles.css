@@ -1263,10 +1263,18 @@ header,
 
 .hero-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
   width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 960px) {
+  .hero-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 }
 
 .hero-stat-card {
@@ -1359,6 +1367,14 @@ header,
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
+}
+
+.subject-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .subject-icon-box {
@@ -4738,12 +4754,9 @@ input[type="range"]::-webkit-slider-thumb {
     padding: 14px 16px 28px;
     gap: 16px;
   }
-  .header {
-    padding: 10px 16px;
-  }
   .hero-stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
   }
   .hero-stat-card {
     padding: 12px 14px;
@@ -4764,22 +4777,6 @@ input[type="range"]::-webkit-slider-thumb {
     padding: 10px 10px 24px;
     gap: 14px;
   }
-  .header {
-    padding: 8px 12px;
-    border-radius: var(--r-xl);
-  }
-  .brand-text h1 {
-    font-size: 1.05rem;
-  }
-  .brand-icon-wrap {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-  }
-  .brand-infinity-svg {
-    width: 20px;
-    height: 20px;
-  }
   .icon-btn {
     padding: 6px 10px;
   }
@@ -4790,18 +4787,72 @@ input[type="range"]::-webkit-slider-thumb {
     font-size: 1.25rem;
   }
   .hero-stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
-  .subject-card {
-    padding: 10px 12px;
+  .hero-stat-card {
+    padding: 12px 12px !important;
+    gap: 10px !important;
+    border-radius: var(--r-md) !important;
+  }
+  .hstat-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.1rem !important;
+    border-radius: 10px !important;
+  }
+  .hstat-label {
+    font-size: 0.6rem !important;
+    letter-spacing: 0.05em !important;
+  }
+  .hstat-value {
+    font-size: 1.15rem !important;
+  }
+  .subject-card.ypt-card-container {
+    padding: 14px 14px !important;
   }
   .subject-bar {
-    flex-wrap: wrap;
-    gap: 8px;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .subject-icon-box {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.1rem !important;
+    flex-shrink: 0 !important;
+  }
+  .active-subj-info-wrap {
+    flex: 1 1 calc(100% - 48px) !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
   .subject-input {
-    min-width: 120px;
+    font-size: 0.95rem !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .active-subj-sub {
+    font-size: 0.68rem !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .subject-bar-actions {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+  .subject-bar-actions .glow-btn {
+    flex: 1 1 50% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 8px 10px !important;
+    font-size: 0.78rem !important;
   }
   .timer-card {
     padding: 20px 12px;
@@ -4897,16 +4948,27 @@ input[type="range"]::-webkit-slider-thumb {
 
 @media (max-width: 480px) {
   .hero-stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
-  .subject-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  .hero-stat-card {
+    padding: 10px 10px !important;
+    gap: 8px !important;
   }
-  .active-subj-info-wrap {
-    width: 100%;
-    order: 3;
+  .hstat-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1rem !important;
+  }
+  .hstat-value {
+    font-size: 1.05rem !important;
+  }
+  .subject-card.ypt-card-container {
+    padding: 12px 12px !important;
+  }
+  .subject-bar-actions .glow-btn {
+    padding: 7px 8px !important;
+    font-size: 0.74rem !important;
   }
   .add-subj-grid {
     grid-template-columns: 1fr;
@@ -5160,88 +5222,107 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 @media (max-width: 768px) {
-  /* Hide the 4 top-right header action icons and center pill from the top navbar on mobile */
+  /* Hide the 4 top-right header action icons, header-hub-btn, and center pill from the top navbar on mobile */
   .header .header-actions,
-  .header .nav-center-pill {
+  .header .nav-center-pill,
+  .header .header-hub-btn {
     display: none !important;
   }
 
-  /* Clean Top Navigation Bar: [Menu ☰] [Infinity ∞] [GoTime4Study Logo] ... [Theme ☀️/🌙] */
+  /* 1. Header Navbar Mobile Layout Restructure:
+     Order (Left to Right):
+       1. Left: Hamburger / Three-line menu icon (≡).
+       2. Center/Middle: Infinite Logo + "GoTime4Study" text brand identity.
+       3. Right: Premium Aesthetic Theme Toggle Button.
+     Mobile Responsive: Set justify-between items-center w-full px-4 to prevent overlapping or clipping on narrow mobile screens (360px–420px).
+  */
   .header {
-    padding: 10px 16px;
-    gap: 12px;
+    display: flex !important;
     justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 8px 16px !important; /* px-4 */
+    gap: 8px !important;
+    border-radius: var(--r-xl) !important;
+    box-sizing: border-box !important;
+  }
+
+  .header-left-group {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    order: 1 !important;
+    margin: 0 !important;
+  }
+
+  .hamburger-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    font-size: 1.15rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .brand,
+  .brand.header-brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    margin: 0 auto !important;
+    min-width: 0 !important;
+    order: 2 !important;
+  }
+
+  .brand-icon-wrap {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .brand-infinity-svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .brand-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+  }
+
+  .brand-text h1,
+  header h1,
+  header .brand-title,
+  .brand-title {
+    font-size: 1.05rem !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
   }
 
   .header-right-group {
     display: flex !important;
     align-items: center !important;
-    margin-left: auto !important;
+    justify-content: flex-end !important;
     flex-shrink: 0 !important;
+    margin-left: 0 !important;
+    order: 3 !important;
   }
 
-  .header .header-extreme-right-btn {
+  .header .header-extreme-right-btn,
+  .neumorphic-theme-switch {
     display: inline-flex !important;
-    margin-left: auto !important;
-  }
-
-  .header-left-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .hamburger-btn {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    font-size: 1.15rem;
-    flex-shrink: 0;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-grow: 1;
-    margin-left: 10px;
-    min-width: 0;
-  }
-
-  .brand-icon-wrap {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    border-radius: 10px;
-    flex-shrink: 0;
-  }
-
-  .brand-infinity-svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .brand-text {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex-grow: 1;
-    position: relative !important;
-    z-index: 99 !important;
-  }
-
-  .brand-text h1,
-  header h1,
-  header .logo {
-    font-size: 1.25rem;
-    letter-spacing: -0.01em;
-    line-height: 1.1;
-    white-space: nowrap !important;
-    position: relative !important;
-    z-index: 99 !important;
-    margin: 0;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
   }
 
   .footer-top,
@@ -5253,6 +5334,53 @@ input[type="range"]::-webkit-slider-thumb {
 
   .footer-nav {
     justify-content: center;
+  }
+}
+
+/* Specific narrow mobile optimization (360px–420px) */
+@media (max-width: 420px) {
+  .header {
+    padding: 6px 12px !important;
+  }
+  .hamburger-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    font-size: 1.05rem !important;
+  }
+  .brand,
+  .brand.header-brand {
+    gap: 6px !important;
+  }
+  .brand-icon-wrap {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+  }
+  .brand-infinity-svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .brand-text h1,
+  header h1,
+  header .brand-title,
+  .brand-title {
+    font-size: 0.95rem !important;
+  }
+  .neumorphic-switch-track {
+    width: 66px !important;
+    height: 32px !important;
+    padding: 0 6px !important;
+  }
+  .neumorphic-switch-thumb {
+    width: 24px !important;
+    height: 24px !important;
+    top: 3px !important;
+    left: 3px !important;
+  }
+  :root[data-theme="oled"] .neumorphic-switch-thumb,
+  .neumorphic-theme-switch.is-oled .neumorphic-switch-thumb {
+    transform: translateX(33px) !important;
   }
 }
 

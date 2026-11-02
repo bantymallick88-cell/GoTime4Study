@@ -26,8 +26,8 @@ const Store = (() => {
     gradient: true,
     spotify: '',
     lb: {},
-    subject: '',
-    subjectsList: ['Mathematics', 'Physics', 'Computer Science', 'Biology', 'Literature'],
+    subject: 'General Focus',
+    subjectsList: [{ id: 'General Focus', name: 'General Focus', color: '#10b981', category: 'General', goalMinutes: 60 }],
     subjectLogs: {},
     journal: [],
     journalPin: '0000',
@@ -58,6 +58,28 @@ const Store = (() => {
       merged.activeTag = merged.selectedSessionType;
       merged.breakdownPeriod = merged.breakdownPeriod || (merged.aiScope === 'month' ? 'monthly' : 'weekly');
       merged.aiScope = (merged.breakdownPeriod === 'monthly' ? 'month' : 'week');
+
+      // Purge legacy dummy subjects (Mathematics, Physics, Computer Science, Biology, Literature, Math)
+      const DUMMY_NAMES = ['mathematics', 'physics', 'computer science', 'biology', 'literature', 'math'];
+      if (Array.isArray(merged.subjectsList)) {
+        const filtered = merged.subjectsList.filter(s => {
+          const name = (typeof s === 'string' ? s : s?.name || '').trim().toLowerCase();
+          return !DUMMY_NAMES.includes(name);
+        });
+        if (filtered.length) {
+          merged.subjectsList = filtered;
+        } else {
+          merged.subjectsList = [{ id: 'General Focus', name: 'General Focus', color: '#10b981', category: 'General', goalMinutes: 60 }];
+        }
+      } else {
+        merged.subjectsList = [{ id: 'General Focus', name: 'General Focus', color: '#10b981', category: 'General', goalMinutes: 60 }];
+      }
+
+      if (!merged.subject || DUMMY_NAMES.includes((merged.subject || '').trim().toLowerCase())) {
+        const first = merged.subjectsList[0];
+        merged.subject = (first && (typeof first === 'string' ? first : first.name)) || 'General Focus';
+      }
+
       return merged;
     } catch { return structuredClone(defaults); }
   }
@@ -2024,20 +2046,33 @@ const SubjectLogger = (() => {
   }
 
   function getNormalizedList() {
+    const DUMMY_NAMES = ['mathematics', 'physics', 'computer science', 'biology', 'literature', 'math'];
     if (!Array.isArray(Store.d.subjectsList) || !Store.d.subjectsList.length) {
       Store.d.subjectsList = [
-        { id: 'Mathematics', name: 'Mathematics', color: '#06b6d4', category: 'Science', goalMinutes: 60 },
-        { id: 'Physics', name: 'Physics', color: '#8b5cf6', category: 'Science', goalMinutes: 60 },
-        { id: 'Computer Science', name: 'Computer Science', color: '#10b981', category: 'Coding', goalMinutes: 90 },
-        { id: 'Biology', name: 'Biology', color: '#84cc16', category: 'Science', goalMinutes: 45 },
-        { id: 'Literature', name: 'Literature', color: '#f59e0b', category: 'Academics', goalMinutes: 45 }
+        { id: 'General Focus', name: 'General Focus', color: '#10b981', category: 'General', goalMinutes: 60 }
       ];
+      Store.d.subject = 'General Focus';
       Store.save();
       return Store.d.subjectsList;
     }
 
-    let changed = false;
-    const normalized = Store.d.subjectsList.map((item, idx) => {
+    // Filter out legacy dummy subjects
+    const nonDummies = Store.d.subjectsList.filter(s => {
+      const name = (typeof s === 'string' ? s : s?.name || '').trim().toLowerCase();
+      return !DUMMY_NAMES.includes(name);
+    });
+
+    if (!nonDummies.length) {
+      Store.d.subjectsList = [
+        { id: 'General Focus', name: 'General Focus', color: '#10b981', category: 'General', goalMinutes: 60 }
+      ];
+      Store.d.subject = 'General Focus';
+      Store.save();
+      return Store.d.subjectsList;
+    }
+
+    let changed = (nonDummies.length !== Store.d.subjectsList.length);
+    const normalized = nonDummies.map((item, idx) => {
       if (typeof item === 'string') {
         changed = true;
         return {
@@ -2050,7 +2085,7 @@ const SubjectLogger = (() => {
       }
       return {
         id: item.id || item.name,
-        name: item.name || 'Untitled Subject',
+        name: item.name || 'General Focus',
         color: item.color || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
         category: item.category || 'General',
         goalMinutes: Number(item.goalMinutes) || 60
@@ -2059,6 +2094,9 @@ const SubjectLogger = (() => {
 
     if (changed) {
       Store.d.subjectsList = normalized;
+      if (!Store.d.subject || DUMMY_NAMES.includes((Store.d.subject || '').toLowerCase())) {
+        Store.d.subject = normalized[0].name;
+      }
       Store.save();
     }
     return normalized;
