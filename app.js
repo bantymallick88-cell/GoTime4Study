@@ -715,6 +715,49 @@ const Timer = (() => {
     StrictFocus.update();
   }
 
+  function applyCustomSettings() {
+    const inputCustomMin = $('#inputCustomMinutes') || $('#inputCustomDuration');
+    const inputCustomSec = $('#inputCustomSeconds');
+    const inputCustomBreak = $('#inputCustomBreakDuration');
+    const inputCustomBreakSec = $('#inputCustomBreakSeconds');
+
+    const mins = inputCustomMin ? Math.max(0, Math.min(720, parseInt(inputCustomMin.value, 10) || 0)) : 45;
+    const secs = inputCustomSec ? Math.max(0, Math.min(59, parseInt(inputCustomSec.value, 10) || 0)) : 0;
+    const breakMins = inputCustomBreak ? Math.max(1, Math.min(180, parseInt(inputCustomBreak.value, 10) || 10)) : 10;
+    const breakSecs = inputCustomBreakSec ? Math.max(0, Math.min(59, parseInt(inputCustomBreakSec.value, 10) || 0)) : 0;
+
+    if (mins === 0 && secs === 0) {
+      toast('Study duration must be at least 1 second', 'bad');
+      return;
+    }
+
+    Store.d.customStudyMinutes = mins;
+    Store.d.customStudySeconds = secs;
+    Store.d.customBreakMinutes = breakMins;
+    Store.d.customBreakSeconds = breakSecs;
+    Store.d.settings.custom = mins;
+    Store.d.settings.customBreak = breakMins;
+    Store.save();
+
+    if (mode === 'custom') {
+      total = mins * 60 + secs;
+      if (!running) left = total;
+      paint();
+      updateInfo();
+    } else if (mode === 'customBreak') {
+      total = breakMins * 60 + breakSecs;
+      if (!running) left = total;
+      paint();
+      updateInfo();
+    }
+    const tagLabels = { revision: 'Revision', test: 'Test', class: 'Theory Class' };
+    const curTag = Store.d.selectedSessionType || Store.d.activeTag || 'class';
+    toast(`Custom Settings Applied: ${mins}m ${secs}s sprint · ${breakMins}m break (${tagLabels[curTag] || curTag})`, 'good');
+    if (mode === 'custom' || mode === 'customBreak') {
+      try { if (typeof AIStudyAnalytics !== 'undefined' && AIStudyAnalytics.render) AIStudyAnalytics.render(); } catch {}
+    }
+  }
+
   return {
     get mode() { return mode; },
     get running() { return running; },
@@ -823,43 +866,6 @@ const Timer = (() => {
         inputCustomBreakSec.addEventListener('change', updateBreakTimeDirectly);
       }
 
-      function applyCustomSettings() {
-        const mins = inputCustomMin ? Math.max(0, Math.min(720, parseInt(inputCustomMin.value, 10) || 0)) : 45;
-        const secs = inputCustomSec ? Math.max(0, Math.min(59, parseInt(inputCustomSec.value, 10) || 0)) : 0;
-        const breakMins = inputCustomBreak ? Math.max(1, Math.min(180, parseInt(inputCustomBreak.value, 10) || 10)) : 10;
-        const breakSecs = inputCustomBreakSec ? Math.max(0, Math.min(59, parseInt(inputCustomBreakSec.value, 10) || 0)) : 0;
-
-        if (mins === 0 && secs === 0) {
-          toast('Study duration must be at least 1 second', 'bad');
-          return;
-        }
-
-        Store.d.customStudyMinutes = mins;
-        Store.d.customStudySeconds = secs;
-        Store.d.customBreakMinutes = breakMins;
-        Store.d.customBreakSeconds = breakSecs;
-        Store.d.settings.custom = mins;
-        Store.d.settings.customBreak = breakMins;
-        Store.save();
-
-        if (mode === 'custom') {
-          total = mins * 60 + secs;
-          if (!running) left = total;
-          paint();
-          updateInfo();
-        } else if (mode === 'customBreak') {
-          total = breakMins * 60 + breakSecs;
-          if (!running) left = total;
-          paint();
-          updateInfo();
-        }
-        const tagLabels = { revision: 'Revision', test: 'Test', class: 'Theory Class' };
-        const curTag = Store.d.selectedSessionType || Store.d.activeTag || 'class';
-        toast(`Custom Settings Applied: ${mins}m ${secs}s sprint · ${breakMins}m break (${tagLabels[curTag] || curTag})`, 'good');
-        if (mode === 'custom' || mode === 'customBreak') {
-          try { if (typeof AIStudyAnalytics !== 'undefined' && AIStudyAnalytics.render) AIStudyAnalytics.render(); } catch {}
-        }
-      }
       if (btnSetCustom) btnSetCustom.addEventListener('click', applyCustomSettings);
       if (inputCustomMin) inputCustomMin.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyCustomSettings(); });
       if (inputCustomSec) inputCustomSec.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyCustomSettings(); });
@@ -2919,6 +2925,12 @@ const UI = (() => {
       // periodic room heartbeat
       setInterval(() => { if (Rooms.inRoom) Rooms.broadcastState(); }, 4000);
     },
+    openSidebar,
+    closeSidebar,
+    openProfileModal,
+    applyTheme,
+    syncProfileUI,
+    syncSoundUI,
   };
 })();
 
@@ -3607,12 +3619,18 @@ const Top30Leaderboard = (() => {
     const cityInp = $('#lbRegCity');
     const stateInp = $('#lbRegState');
     const countryInp = $('#lbRegCountry');
+    const hoursInp = $('#lbRegHours');
     const regToggleBtnText = $('#toggleRegBtnText');
 
     if (nameInp && !nameInp.value) nameInp.value = profile.name || profile.nick || '';
     if (cityInp && !cityInp.value) cityInp.value = profile.city || '';
     if (stateInp && !stateInp.value) stateInp.value = profile.state || '';
     if (countryInp && !countryInp.value) countryInp.value = profile.country || '';
+    if (hoursInp && !hoursInp.value) {
+      const curTotals = (typeof Stats !== 'undefined' && Stats.totals) ? Stats.totals() : { week: 0 };
+      const curHrs = (curTotals.week || 0) / 60;
+      if (curHrs > 0) hoursInp.placeholder = `Current: ${curHrs.toFixed(1)} hrs`;
+    }
 
     if (regToggleBtnText) {
       const hasProfile = !!(profile.name || profile.nick);
@@ -3706,7 +3724,7 @@ const Top30Leaderboard = (() => {
     triggerBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        if (typeof closeSidebar === 'function') closeSidebar();
+        if (typeof UI !== 'undefined' && UI.closeSidebar) UI.closeSidebar();
         open();
       });
     });
@@ -3734,7 +3752,14 @@ const Top30Leaderboard = (() => {
         const city = ($('#lbRegCity')?.value || '').trim() || 'San Francisco';
         const state = ($('#lbRegState')?.value || '').trim() || 'California';
         const country = ($('#lbRegCountry')?.value || '').trim() || 'United States 🇺🇸';
+        const hoursInp = $('#lbRegHours');
+        const customHours = hoursInp ? parseFloat(hoursInp.value) : NaN;
         const selAvatar = $('#lbRegAvatarPicker .avatar-choice.selected')?.dataset.avatar || '🦉';
+
+        if (!isNaN(customHours) && customHours > 0) {
+          Store.addFocus(customHours * 3600);
+          if (typeof Stats !== 'undefined' && Stats.refresh) Stats.refresh();
+        }
 
         Store.d.profile = {
           ...Store.d.profile,
@@ -3746,7 +3771,9 @@ const Top30Leaderboard = (() => {
           avatar: selAvatar,
         };
         Store.save();
-        syncProfileUI();
+        if (typeof UI !== 'undefined' && UI.syncProfileUI) {
+          UI.syncProfileUI();
+        }
 
         formReg.style.display = 'none';
 

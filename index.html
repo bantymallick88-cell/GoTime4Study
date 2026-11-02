@@ -176,15 +176,15 @@
 
       <div class="header-right-group">
         <div class="header-actions">
-          <!-- Top 30 Global Leaderboard Button in Header -->
-          <button id="btnHeaderLeaderboard" class="icon-btn header-lb-btn" title="Top 30 Global Focus Leaders (🏆)" aria-label="Open Top 30 Global Focus Leaderboard">
-            <span class="hlb-icon">🏆</span><small class="btn-caption">Leaders</small>
-          </button>
           <button id="btnHeaderSound" class="icon-btn" title="Toggle Sound Chime (🔊)" aria-label="Sound Toggle">
             <span id="soundHeaderIcon">🔊</span><small class="btn-caption" id="soundHeaderLabel">Audio</small>
           </button>
           <button id="btnSettings" class="icon-btn" title="Timer & Sound Settings" aria-label="Settings">
             <span>⚙️</span><small class="btn-caption">Config</small>
+          </button>
+          <!-- Top 30 Global Leaderboard Button (Trophy) directly next to Theme Switcher -->
+          <button id="btnHeaderLeaderboard" class="icon-btn header-lb-btn" title="Top 30 Global Focus Leaders (🏆)" aria-label="Open Top 30 Global Focus Leaderboard">
+            <span class="hlb-icon">🏆</span><small class="btn-caption">Leaders</small>
           </button>
         </div>
 
@@ -1410,6 +1410,10 @@
             <div class="form-group">
               <label class="field-label-sm" for="lbRegCountry">Country</label>
               <input type="text" id="lbRegCountry" class="txt-input sm" maxlength="32" placeholder="e.g. United States 🇺🇸" required />
+            </div>
+            <div class="form-group">
+              <label class="field-label-sm" for="lbRegHours">Submit Study Hours (Optional)</label>
+              <input type="number" id="lbRegHours" class="txt-input sm" min="0" max="999" step="0.5" placeholder="e.g. 10.0" />
             </div>
           </div>
 
