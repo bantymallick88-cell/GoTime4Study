@@ -120,7 +120,8 @@ function fmtMin(min) {
   return m ? `${h}h ${m}m` : `${h}h`;
 }
 function esc(str) {
-  return str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  if (str == null) return '';
+  return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function toast(msg, kind = '') {
   const container = $('#toasts');
@@ -801,7 +802,19 @@ const Timer = (() => {
       const btnStartPause = $('#btnStartPause');
       const btnReset = $('#btnReset');
       const btnSkip = $('#btnSkip');
-      if (btnStartPause) btnStartPause.addEventListener('click', () => (running ? pause() : start()));
+      if (btnStartPause) {
+        btnStartPause.addEventListener('click', () => {
+          if (running) {
+            pause();
+          } else {
+            if (typeof Top30Leaderboard !== 'undefined' && Top30Leaderboard.isProfileComplete && !Top30Leaderboard.isProfileComplete()) {
+              Top30Leaderboard.openOnboardingModal(() => start());
+              return;
+            }
+            start();
+          }
+        });
+      }
       if (btnReset) btnReset.addEventListener('click', reset);
       if (btnSkip) btnSkip.addEventListener('click', skip);
 
@@ -1233,7 +1246,7 @@ const Rooms = (() => {
     leaderboardData(scope) {
       const rows = new Map();
       const mine = Stats.totalsFor(scope);
-      rows.set('__me__', { nick: Store.d.profile.nick || 'You', avatar: Store.d.profile.avatar, sec: mine * 60 });
+      rows.set('__me__', { nick: Store.d.profile?.nick || 'You', avatar: Store.d.profile?.avatar || '🦉', sec: mine * 60 });
       Object.values(members).forEach((m) => {
         if (m.id === me?.id) return;
         const prev = rows.get(m.nick) || { nick: m.nick, avatar: m.avatar, sec: 0 };
@@ -2768,13 +2781,24 @@ const UI = (() => {
       if (btnSaveProfile) {
         btnSaveProfile.addEventListener('click', () => {
           const nickInput = $('#profileNickInput');
-          const nick = nickInput ? nickInput.value.trim() || 'FocusMaster' : 'FocusMaster';
           const cityInput = $('#profileCityInput');
-          const city = cityInput ? cityInput.value.trim() || 'San Francisco' : 'San Francisco';
           const stateInput = $('#profileStateInput');
-          const state = stateInput ? stateInput.value.trim() || 'California' : 'California';
           const countryInput = $('#profileCountryInput');
-          const country = countryInput ? countryInput.value.trim() || 'United States 🇺🇸' : 'United States 🇺🇸';
+
+          const nick = nickInput ? nickInput.value.trim() : '';
+          const city = cityInput ? cityInput.value.trim() : '';
+          const state = stateInput ? stateInput.value.trim() : '';
+          const country = countryInput ? countryInput.value.trim() : '';
+
+          if (!nick || !city || !state || !country) {
+            toast('⚠️ Name, Country, State, and City are strictly mandatory to participate in the Leaderboard!', 'bad');
+            if (!nick && nickInput) nickInput.focus();
+            else if (!country && countryInput) countryInput.focus();
+            else if (!state && stateInput) stateInput.focus();
+            else if (!city && cityInput) cityInput.focus();
+            return;
+          }
+
           const selAvatar = $('#profileAvatarPicker .avatar-choice.selected')?.dataset.avatar || '🦉';
 
           Store.d.profile = {
@@ -2789,7 +2813,7 @@ const UI = (() => {
           Store.save();
           syncProfileUI();
           overlay('localProfileOverlay', false);
-          toast('Local profile saved ✓ Rankings updated', 'good');
+          toast('Profile verified & saved! Study hours synced to Top 30 🏆', 'good');
 
           // If inside a live room, update my nick & avatar
           if (Rooms && Rooms.inRoom) {
@@ -3439,45 +3463,77 @@ const AIStudyAnalytics = (() => {
 })();
 
 /* ════════════════════════════════════════════════════════════
-   14. TOP 30 FOCUS LEADERBOARD MODAL
+   14. TOP 30 DYNAMIC GLOBAL FOCUS LEADERBOARD & MANDATORY ONBOARDING
    ════════════════════════════════════════════════════════════ */
 const Top30Leaderboard = (() => {
   let activeScope = 'week'; // 'week' or 'month'
+  const REGISTRY_KEY = 'gt4s_dynamic_top30_registry_v2';
 
-  const PEER_STUDENTS = [
-    { nick: 'Aarav Sharma', avatar: '👨‍🎓', weekBase: 38.5, monthBase: 154.0, streak: 28, city: 'New Delhi', state: 'Delhi', country: 'India 🇮🇳' },
-    { nick: 'Elena Rostova', avatar: '👩‍💻', weekBase: 35.2, monthBase: 141.5, streak: 21, city: 'Munich', state: 'Bavaria', country: 'Germany 🇩🇪' },
-    { nick: 'Liam Chen', avatar: '⚡', weekBase: 33.8, monthBase: 135.0, streak: 26, city: 'Taipei', state: 'Northern', country: 'Taiwan 🇹🇼' },
-    { nick: 'Sophia Patel', avatar: '📚', weekBase: 31.4, monthBase: 126.0, streak: 19, city: 'London', state: 'England', country: 'United Kingdom 🇬🇧' },
-    { nick: 'Kenji Takahashi', avatar: '🎯', weekBase: 29.6, monthBase: 118.5, streak: 17, city: 'Tokyo', state: 'Kanto', country: 'Japan 🇯🇵' },
-    { nick: 'Maya Lin', avatar: '🌸', weekBase: 28.0, monthBase: 112.0, streak: 23, city: 'Singapore', state: 'Central', country: 'Singapore 🇸🇬' },
-    { nick: 'Marcus Thorne', avatar: '☕', weekBase: 26.5, monthBase: 106.0, streak: 15, city: 'Seattle', state: 'Washington', country: 'United States 🇺🇸' },
-    { nick: 'Ananya Roy', avatar: '🎨', weekBase: 25.1, monthBase: 100.5, streak: 14, city: 'Kolkata', state: 'West Bengal', country: 'India 🇮🇳' },
-    { nick: 'Lucas Dubois', avatar: '🚀', weekBase: 23.8, monthBase: 95.2, streak: 18, city: 'Paris', state: 'Île-de-France', country: 'France 🇫🇷' },
-    { nick: 'Zara Al-Mansoor', avatar: '✨', weekBase: 22.4, monthBase: 89.6, streak: 12, city: 'Dubai', state: 'Dubai', country: 'United Arab Emirates 🇦🇪' },
-    { nick: 'Devon Vance', avatar: '🎧', weekBase: 21.0, monthBase: 84.0, streak: 16, city: 'Toronto', state: 'Ontario', country: 'Canada 🇨🇦' },
-    { nick: 'Chiara Rossi', avatar: '🌿', weekBase: 19.5, monthBase: 78.0, streak: 11, city: 'Milan', state: 'Lombardy', country: 'Italy 🇮🇹' },
-    { nick: 'Ethan Walker', avatar: '🔥', weekBase: 18.2, monthBase: 72.8, streak: 13, city: 'Melbourne', state: 'Victoria', country: 'Australia 🇦🇺' },
-    { nick: 'Priya Nair', avatar: '🪐', weekBase: 17.0, monthBase: 68.0, streak: 10, city: 'Bengaluru', state: 'Karnataka', country: 'India 🇮🇳' },
-    { nick: 'Mateo Hernandez', avatar: '💻', weekBase: 15.8, monthBase: 63.2, streak: 9, city: 'Madrid', state: 'Community of Madrid', country: 'Spain 🇪🇸' },
-    { nick: 'Chloe Dupont', avatar: '📖', weekBase: 14.5, monthBase: 58.0, streak: 14, city: 'Lyon', state: 'Auvergne-Rhône-Alpes', country: 'France 🇫🇷' },
-    { nick: 'Rohan Mehra', avatar: '🧠', weekBase: 13.2, monthBase: 52.8, streak: 8, city: 'Mumbai', state: 'Maharashtra', country: 'India 🇮🇳' },
-    { nick: 'Emma Watson', avatar: '🕊️', weekBase: 12.0, monthBase: 48.0, streak: 7, city: 'Oxford', state: 'Oxfordshire', country: 'United Kingdom 🇬🇧' },
-    { nick: 'Hiroshi Sato', avatar: '🏹', weekBase: 11.1, monthBase: 44.4, streak: 6, city: 'Osaka', state: 'Kansai', country: 'Japan 🇯🇵' },
-    { nick: 'Ingrid Berg', avatar: '❄️', weekBase: 10.0, monthBase: 40.0, streak: 9, city: 'Oslo', state: 'Østlandet', country: 'Norway 🇳🇴' },
-    { nick: 'Noah Becker', avatar: '⚙️', weekBase: 9.2, monthBase: 36.8, streak: 5, city: 'Berlin', state: 'Berlin', country: 'Germany 🇩🇪' },
-    { nick: 'Fatima Zahra', avatar: '🌙', weekBase: 8.4, monthBase: 33.6, streak: 6, city: 'Cairo', state: 'Cairo Governorate', country: 'Egypt 🇪🇬' },
-    { nick: 'Gabriel Silva', avatar: '🌊', weekBase: 7.5, monthBase: 30.0, streak: 4, city: 'São Paulo', state: 'São Paulo', country: 'Brazil 🇧🇷' },
-    { nick: 'Sunita Rao', avatar: '⭐', weekBase: 6.8, monthBase: 27.2, streak: 5, city: 'Hyderabad', state: 'Telangana', country: 'India 🇮🇳' },
-    { nick: 'Felix Müller', avatar: '🦊', weekBase: 6.0, monthBase: 24.0, streak: 3, city: 'Zurich', state: 'Zurich', country: 'Switzerland 🇨🇭' },
-    { nick: 'Hanna Lindqvist', avatar: '🌲', weekBase: 5.2, monthBase: 20.8, streak: 4, city: 'Stockholm', state: 'Stockholm County', country: 'Sweden 🇸🇪' },
-    { nick: 'Tariq Aziz', avatar: '🦅', weekBase: 4.5, monthBase: 18.0, streak: 3, city: 'Istanbul', state: 'Marmara', country: 'Turkey 🇹🇷' },
-    { nick: 'Mei-Ling Wang', avatar: '🎋', weekBase: 3.8, monthBase: 15.2, streak: 2, city: 'Seoul', state: 'Seoul Capital', country: 'South Korea 🇰🇷' },
-    { nick: 'Oliver Smith', avatar: '🧭', weekBase: 3.1, monthBase: 12.4, streak: 2, city: 'Boston', state: 'Massachusetts', country: 'United States 🇺🇸' },
+  // Dynamic active focus learners pool
+  const SEED_LEARNERS = [
+    { id: 'usr_aarav', name: 'Aarav Sharma', avatar: '👨‍🎓', weekMinutes: 2310, monthMinutes: 9240, streak: 28, city: 'New Delhi', state: 'Delhi', country: 'India 🇮🇳' },
+    { id: 'usr_elena', name: 'Elena Rostova', avatar: '👩‍💻', weekMinutes: 2112, monthMinutes: 8490, streak: 21, city: 'Munich', state: 'Bavaria', country: 'Germany 🇩🇪' },
+    { id: 'usr_liam', name: 'Liam Chen', avatar: '⚡', weekMinutes: 2028, monthMinutes: 8100, streak: 26, city: 'Taipei', state: 'Northern', country: 'Taiwan 🇹🇼' },
+    { id: 'usr_sophia', name: 'Sophia Patel', avatar: '📚', weekMinutes: 1884, monthMinutes: 7560, streak: 19, city: 'London', state: 'England', country: 'United Kingdom 🇬🇧' },
+    { id: 'usr_kenji', name: 'Kenji Takahashi', avatar: '🎯', weekMinutes: 1776, monthMinutes: 7110, streak: 17, city: 'Tokyo', state: 'Kanto', country: 'Japan 🇯🇵' },
+    { id: 'usr_maya', name: 'Maya Lin', avatar: '🌸', weekMinutes: 1680, monthMinutes: 6720, streak: 23, city: 'Singapore', state: 'Central', country: 'Singapore 🇸🇬' },
+    { id: 'usr_marcus', name: 'Marcus Thorne', avatar: '☕', weekMinutes: 1590, monthMinutes: 6360, streak: 15, city: 'Seattle', state: 'Washington', country: 'United States 🇺🇸' },
+    { id: 'usr_ananya', name: 'Ananya Roy', avatar: '🎨', weekMinutes: 1506, monthMinutes: 6030, streak: 14, city: 'Kolkata', state: 'West Bengal', country: 'India 🇮🇳' },
+    { id: 'usr_lucas', name: 'Lucas Dubois', avatar: '🚀', weekMinutes: 1428, monthMinutes: 5712, streak: 18, city: 'Paris', state: 'Île-de-France', country: 'France 🇫🇷' },
+    { id: 'usr_zara', name: 'Zara Al-Mansoor', avatar: '✨', weekMinutes: 1344, monthMinutes: 5376, streak: 12, city: 'Dubai', state: 'Dubai', country: 'United Arab Emirates 🇦🇪' },
+    { id: 'usr_devon', name: 'Devon Vance', avatar: '🎧', weekMinutes: 1260, monthMinutes: 5040, streak: 16, city: 'Toronto', state: 'Ontario', country: 'Canada 🇨🇦' },
+    { id: 'usr_chiara', name: 'Chiara Rossi', avatar: '🌿', weekMinutes: 1170, monthMinutes: 4680, streak: 11, city: 'Milan', state: 'Lombardy', country: 'Italy 🇮🇹' },
+    { id: 'usr_ethan', name: 'Ethan Walker', avatar: '🔥', weekMinutes: 1092, monthMinutes: 4368, streak: 13, city: 'Melbourne', state: 'Victoria', country: 'Australia 🇦🇺' },
+    { id: 'usr_priya', name: 'Priya Nair', avatar: '🪐', weekMinutes: 1020, monthMinutes: 4080, streak: 10, city: 'Bengaluru', state: 'Karnataka', country: 'India 🇮🇳' },
+    { id: 'usr_mateo', name: 'Mateo Hernandez', avatar: '💻', weekMinutes: 948, monthMinutes: 3792, streak: 9, city: 'Madrid', state: 'Community of Madrid', country: 'Spain 🇪🇸' },
+    { id: 'usr_chloe', name: 'Chloe Dupont', avatar: '📖', weekMinutes: 870, monthMinutes: 3480, streak: 14, city: 'Lyon', state: 'Auvergne-Rhône-Alpes', country: 'France 🇫🇷' },
+    { id: 'usr_rohan', name: 'Rohan Mehra', avatar: '🧠', weekMinutes: 792, monthMinutes: 3168, streak: 8, city: 'Mumbai', state: 'Maharashtra', country: 'India 🇮🇳' },
+    { id: 'usr_emma', name: 'Emma Watson', avatar: '🕊️', weekMinutes: 720, monthMinutes: 2880, streak: 7, city: 'Oxford', state: 'Oxfordshire', country: 'United Kingdom 🇬🇧' },
+    { id: 'usr_hiroshi', name: 'Hiroshi Sato', avatar: '🏹', weekMinutes: 666, monthMinutes: 2664, streak: 6, city: 'Osaka', state: 'Kansai', country: 'Japan 🇯🇵' },
+    { id: 'usr_ingrid', name: 'Ingrid Berg', avatar: '❄️', weekMinutes: 600, monthMinutes: 2400, streak: 9, city: 'Oslo', state: 'Østlandet', country: 'Norway 🇳🇴' },
+    { id: 'usr_noah', name: 'Noah Becker', avatar: '⚙️', weekMinutes: 552, monthMinutes: 2208, streak: 5, city: 'Berlin', state: 'Berlin', country: 'Germany 🇩🇪' },
+    { id: 'usr_fatima', name: 'Fatima Zahra', avatar: '🌙', weekMinutes: 504, monthMinutes: 2016, streak: 6, city: 'Cairo', state: 'Cairo Governorate', country: 'Egypt 🇪🇬' },
+    { id: 'usr_gabriel', name: 'Gabriel Silva', avatar: '🌊', weekMinutes: 450, monthMinutes: 1800, streak: 4, city: 'São Paulo', state: 'São Paulo', country: 'Brazil 🇧🇷' },
+    { id: 'usr_sunita', name: 'Sunita Rao', avatar: '⭐', weekMinutes: 408, monthMinutes: 1632, streak: 5, city: 'Hyderabad', state: 'Telangana', country: 'India 🇮🇳' },
+    { id: 'usr_felix', name: 'Felix Müller', avatar: '🦊', weekMinutes: 360, monthMinutes: 1440, streak: 3, city: 'Zurich', state: 'Zurich', country: 'Switzerland 🇨🇭' },
+    { id: 'usr_hanna', name: 'Hanna Lindqvist', avatar: '🌲', weekMinutes: 312, monthMinutes: 1248, streak: 4, city: 'Stockholm', state: 'Stockholm County', country: 'Sweden 🇸🇪' },
+    { id: 'usr_tariq', name: 'Tariq Aziz', avatar: '🦅', weekMinutes: 270, monthMinutes: 1080, streak: 3, city: 'Istanbul', state: 'Marmara', country: 'Turkey 🇹🇷' },
+    { id: 'usr_meiling', name: 'Mei-Ling Wang', avatar: '🎋', weekMinutes: 228, monthMinutes: 912, streak: 2, city: 'Seoul', state: 'Seoul Capital', country: 'South Korea 🇰🇷' },
+    { id: 'usr_oliver', name: 'Oliver Smith', avatar: '🧭', weekMinutes: 186, monthMinutes: 744, streak: 2, city: 'Boston', state: 'Massachusetts', country: 'United States 🇺🇸' },
   ];
 
+  function loadRegistry() {
+    try {
+      const raw = localStorage.getItem(REGISTRY_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length >= 20) return parsed;
+      }
+    } catch {}
+    saveRegistry(SEED_LEARNERS);
+    return structuredClone(SEED_LEARNERS);
+  }
+
+  function saveRegistry(list) {
+    try {
+      localStorage.setItem(REGISTRY_KEY, JSON.stringify(list));
+    } catch {}
+  }
+
+  function isProfileComplete() {
+    const p = Store.d.profile || {};
+    const name = (p.name || p.nick || '').trim();
+    const country = (p.country || '').trim();
+    const state = (p.state || '').trim();
+    const city = (p.city || '').trim();
+    return Boolean(name && name !== 'FocusMaster' && country && state && city);
+  }
+
   function getCombinedList() {
+    const registry = loadRegistry();
     const profile = Store.d.profile || {};
+    const hasProfile = isProfileComplete();
+
     const userNick = (profile.name && profile.name.trim())
       ? profile.name.trim()
       : ((profile.nick && profile.nick.trim()) ? profile.nick.trim() : 'FocusMaster');
@@ -3486,45 +3542,52 @@ const Top30Leaderboard = (() => {
     const userState = (profile.state && profile.state.trim()) ? profile.state.trim() : 'California';
     const userCountry = (profile.country && profile.country.trim()) ? profile.country.trim() : 'United States 🇺🇸';
 
+    // Dynamic real-time focus aggregation from Store.d.sessions
     const totals = (typeof Stats !== 'undefined' && Stats.totals) ? Stats.totals() : { week: 0, month: 0, all: 0 };
     const streakDays = (typeof Stats !== 'undefined' && Stats.streak) ? (Stats.streak() || 1) : 1;
 
-    const realWeekHours = (totals.week || 0) / 60;
-    const realMonthHours = (totals.month || 0) / 60;
+    const realWeekMinutes = totals.week || 0;
+    const realMonthMinutes = totals.month || 0;
+
+    const peers = registry.filter((p) => p.id !== 'local_me');
 
     const userEntry = {
+      id: 'local_me',
       isMe: true,
+      name: userNick,
       nick: userNick,
       avatar: userAvatar,
       city: userCity,
       state: userState,
       country: userCountry,
-      weekHours: realWeekHours,
-      monthHours: realMonthHours,
+      weekMinutes: realWeekMinutes,
+      monthMinutes: realMonthMinutes,
+      weekHours: realWeekMinutes / 60,
+      monthHours: realMonthMinutes / 60,
       streak: Math.max(streakDays, 1),
+      hasCompletedProfile: hasProfile,
     };
 
-    const allEntries = PEER_STUDENTS.map((p) => ({
-      isMe: false,
-      nick: p.nick,
-      avatar: p.avatar,
-      city: p.city,
-      state: p.state,
-      country: p.country,
-      weekHours: p.weekBase,
-      monthHours: p.monthBase,
-      streak: p.streak,
-    }));
+    const allEntries = peers.map((p) => {
+      const wMins = Number(p.weekMinutes) || 0;
+      const mMins = Number(p.monthMinutes) || 0;
+      return {
+        ...p,
+        isMe: false,
+        nick: p.name || p.nick,
+        weekHours: wMins / 60,
+        monthHours: mMins / 60,
+        hours: (activeScope === 'month' ? mMins : wMins) / 60,
+      };
+    });
 
+    userEntry.hours = (activeScope === 'month' ? realMonthMinutes : realWeekMinutes) / 60;
     allEntries.push(userEntry);
 
-    const ranked = allEntries.map((item) => {
-      const hours = (activeScope === 'month') ? item.monthHours : item.weekHours;
-      return {
-        ...item,
-        hours: Math.max(0, hours),
-      };
-    }).sort((a, b) => b.hours - a.hours);
+    const ranked = allEntries.map((item) => ({
+      ...item,
+      hours: Math.max(0, item.hours),
+    })).sort((a, b) => b.hours - a.hours);
 
     return ranked.slice(0, 30);
   }
@@ -3616,16 +3679,16 @@ const Top30Leaderboard = (() => {
 
     // Prepopulate registration form inputs
     const nameInp = $('#lbRegName');
-    const cityInp = $('#lbRegCity');
-    const stateInp = $('#lbRegState');
     const countryInp = $('#lbRegCountry');
+    const stateInp = $('#lbRegState');
+    const cityInp = $('#lbRegCity');
     const hoursInp = $('#lbRegHours');
     const regToggleBtnText = $('#toggleRegBtnText');
 
-    if (nameInp && !nameInp.value) nameInp.value = profile.name || profile.nick || '';
-    if (cityInp && !cityInp.value) cityInp.value = profile.city || '';
-    if (stateInp && !stateInp.value) stateInp.value = profile.state || '';
+    if (nameInp && !nameInp.value) nameInp.value = (profile.name && profile.name !== 'FocusMaster') ? profile.name : (profile.nick && profile.nick !== 'FocusMaster' ? profile.nick : '');
     if (countryInp && !countryInp.value) countryInp.value = profile.country || '';
+    if (stateInp && !stateInp.value) stateInp.value = profile.state || '';
+    if (cityInp && !cityInp.value) cityInp.value = profile.city || '';
     if (hoursInp && !hoursInp.value) {
       const curTotals = (typeof Stats !== 'undefined' && Stats.totals) ? Stats.totals() : { week: 0 };
       const curHrs = (curTotals.week || 0) / 60;
@@ -3633,10 +3696,10 @@ const Top30Leaderboard = (() => {
     }
 
     if (regToggleBtnText) {
-      const hasProfile = !!(profile.name || profile.nick);
+      const hasProfile = isProfileComplete();
       regToggleBtnText.textContent = hasProfile
         ? `✏️ Edit Profile (${profile.name || profile.nick})`
-        : '✏️ Register Free Profile';
+        : '⚠️ Setup Mandatory Profile';
     }
 
     // Mini avatar picker inside registration form
@@ -3677,7 +3740,72 @@ const Top30Leaderboard = (() => {
     render();
   }
 
+  let onboardingSuccessCallback = null;
+
+  function openOnboardingModal(onSuccess = null) {
+    onboardingSuccessCallback = onSuccess;
+    const modal = document.getElementById('onboardingModal');
+    if (!modal) return;
+
+    const profile = Store.d.profile || {};
+    const nameInp = document.getElementById('onboardName');
+    const countryInp = document.getElementById('onboardCountry');
+    const stateInp = document.getElementById('onboardState');
+    const cityInp = document.getElementById('onboardCity');
+    const hoursInp = document.getElementById('onboardHours');
+
+    if (nameInp) nameInp.value = (profile.name && profile.name !== 'FocusMaster') ? profile.name : (profile.nick && profile.nick !== 'FocusMaster' ? profile.nick : '');
+    if (countryInp) countryInp.value = profile.country || '';
+    if (stateInp) stateInp.value = profile.state || '';
+    if (cityInp) cityInp.value = profile.city || '';
+    if (hoursInp) hoursInp.value = '';
+
+    [nameInp, countryInp, stateInp, cityInp].forEach((inp) => {
+      if (inp) inp.classList.remove('input-error');
+    });
+
+    const pickerEl = document.getElementById('onboardAvatarPicker');
+    if (pickerEl && !pickerEl.hasChildNodes()) {
+      const curAvatar = profile.avatar || '🦉';
+      const avatars = ['🦉', '⚡', '👨‍🎓', '👩‍💻', '🚀', '🎯', '🔥', '🧠', '🌸', '☕', '🪐', '💻'];
+      pickerEl.innerHTML = avatars.map((av) => `
+        <button type="button" class="avatar-choice ${av === curAvatar ? 'selected' : ''}" data-avatar="${av}" aria-label="Avatar ${av}">
+          ${av}
+        </button>
+      `).join('');
+
+      pickerEl.querySelectorAll('.avatar-choice').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          pickerEl.querySelectorAll('.avatar-choice').forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+    }
+
+    modal.classList.remove('hidden');
+    modal.removeAttribute('hidden');
+    modal.hidden = false;
+    modal.style.display = 'grid';
+
+    if (nameInp) setTimeout(() => nameInp.focus(), 80);
+  }
+
+  function closeOnboardingModal() {
+    const modal = document.getElementById('onboardingModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.setAttribute('hidden', 'true');
+      modal.hidden = true;
+      modal.style.display = 'none';
+    }
+  }
+
   function open() {
+    if (!isProfileComplete()) {
+      openOnboardingModal(() => open());
+      return;
+    }
     render();
     const modal = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
     if (modal) {
@@ -3717,6 +3845,14 @@ const Top30Leaderboard = (() => {
       });
     });
 
+    const closeOnboardBtns = document.querySelectorAll('#btnCloseOnboardingModal, [data-close="onboardingModal"]');
+    closeOnboardBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeOnboardingModal();
+      });
+    });
+
     // Direct binding for the header button, drawer item link, and dashboard card buttons
     const triggerBtns = document.querySelectorAll(
       '#btnHeaderLeaderboard, #btnSidebarTop30Leaderboard, #btnOpenTop30Leaderboard, [data-nav="top30-leaderboard"], [data-modal="leaderboardModal"]'
@@ -3725,11 +3861,100 @@ const Top30Leaderboard = (() => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         if (typeof UI !== 'undefined' && UI.closeSidebar) UI.closeSidebar();
-        open();
+        if (!isProfileComplete()) {
+          openOnboardingModal(() => open());
+        } else {
+          open();
+        }
       });
     });
 
-    // Toggle Registration Form
+    // Mandatory Onboarding Form Submit Handler
+    const formOnboard = document.getElementById('formOnboarding');
+    if (formOnboard) {
+      formOnboard.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nameInp = document.getElementById('onboardName');
+        const countryInp = document.getElementById('onboardCountry');
+        const stateInp = document.getElementById('onboardState');
+        const cityInp = document.getElementById('onboardCity');
+        const hoursInp = document.getElementById('onboardHours');
+
+        const name = (nameInp?.value || '').trim();
+        const country = (countryInp?.value || '').trim();
+        const state = (stateInp?.value || '').trim();
+        const city = (cityInp?.value || '').trim();
+
+        let hasError = false;
+        let firstMissing = null;
+
+        [
+          { el: nameInp, val: name },
+          { el: countryInp, val: country },
+          { el: stateInp, val: state },
+          { el: cityInp, val: city },
+        ].forEach(({ el, val }) => {
+          if (!val) {
+            hasError = true;
+            if (el) el.classList.add('input-error');
+            if (!firstMissing) firstMissing = el;
+          } else {
+            if (el) el.classList.remove('input-error');
+          }
+        });
+
+        if (hasError) {
+          toast('⚠️ Name, Country, State, and City are strictly MANDATORY to participate!', 'bad');
+          if (firstMissing) firstMissing.focus();
+          return;
+        }
+
+        const selAvatar = document.querySelector('#onboardAvatarPicker .avatar-choice.selected')?.dataset.avatar || '🦉';
+        const customHours = hoursInp ? parseFloat(hoursInp.value) : NaN;
+
+        Store.d.profile = {
+          ...Store.d.profile,
+          name,
+          nick: name,
+          city,
+          state,
+          country,
+          avatar: selAvatar,
+        };
+        Store.save();
+
+        if (!isNaN(customHours) && customHours > 0) {
+          Store.addFocus(customHours * 3600);
+          if (typeof Stats !== 'undefined' && Stats.refresh) Stats.refresh();
+        }
+
+        if (typeof UI !== 'undefined' && UI.syncProfileUI) {
+          UI.syncProfileUI();
+        }
+
+        closeOnboardingModal();
+
+        render();
+        if (typeof LocalLeaderboard !== 'undefined' && LocalLeaderboard.render) {
+          LocalLeaderboard.render();
+        }
+        if (typeof Rooms !== 'undefined' && Rooms.inRoom) {
+          Rooms.broadcastState();
+        }
+
+        toast('Profile registered! Welcome to the Top 30 Global Focus Leaders 🏆', 'good');
+
+        if (typeof onboardingSuccessCallback === 'function') {
+          const cb = onboardingSuccessCallback;
+          onboardingSuccessCallback = null;
+          cb();
+        } else {
+          open();
+        }
+      });
+    }
+
+    // Toggle Registration Form inside Leaderboard Modal
     const btnToggleReg = $('#btnToggleRegForm');
     const formReg = $('#formLeaderboardReg');
     if (btnToggleReg && formReg) {
@@ -3744,22 +3969,47 @@ const Top30Leaderboard = (() => {
       });
     }
 
-    // Submit Free Profile Registration
+    // Submit Registration inside Leaderboard Modal with Strict Validation
     if (formReg) {
       formReg.addEventListener('submit', (e) => {
         e.preventDefault();
-        const name = ($('#lbRegName')?.value || '').trim() || 'FocusMaster';
-        const city = ($('#lbRegCity')?.value || '').trim() || 'San Francisco';
-        const state = ($('#lbRegState')?.value || '').trim() || 'California';
-        const country = ($('#lbRegCountry')?.value || '').trim() || 'United States 🇺🇸';
+        const nameInp = $('#lbRegName');
+        const countryInp = $('#lbRegCountry');
+        const stateInp = $('#lbRegState');
+        const cityInp = $('#lbRegCity');
         const hoursInp = $('#lbRegHours');
+
+        const name = (nameInp?.value || '').trim();
+        const country = (countryInp?.value || '').trim();
+        const state = (stateInp?.value || '').trim();
+        const city = (cityInp?.value || '').trim();
+
+        let hasError = false;
+        let firstMissing = null;
+
+        [
+          { el: nameInp, val: name },
+          { el: countryInp, val: country },
+          { el: stateInp, val: state },
+          { el: cityInp, val: city },
+        ].forEach(({ el, val }) => {
+          if (!val) {
+            hasError = true;
+            if (el) el.classList.add('input-error');
+            if (!firstMissing) firstMissing = el;
+          } else {
+            if (el) el.classList.remove('input-error');
+          }
+        });
+
+        if (hasError) {
+          toast('⚠️ Name, Country, State, and City are strictly MANDATORY to participate in the Leaderboard!', 'bad');
+          if (firstMissing) firstMissing.focus();
+          return;
+        }
+
         const customHours = hoursInp ? parseFloat(hoursInp.value) : NaN;
         const selAvatar = $('#lbRegAvatarPicker .avatar-choice.selected')?.dataset.avatar || '🦉';
-
-        if (!isNaN(customHours) && customHours > 0) {
-          Store.addFocus(customHours * 3600);
-          if (typeof Stats !== 'undefined' && Stats.refresh) Stats.refresh();
-        }
 
         Store.d.profile = {
           ...Store.d.profile,
@@ -3771,6 +4021,12 @@ const Top30Leaderboard = (() => {
           avatar: selAvatar,
         };
         Store.save();
+
+        if (!isNaN(customHours) && customHours > 0) {
+          Store.addFocus(customHours * 3600);
+          if (typeof Stats !== 'undefined' && Stats.refresh) Stats.refresh();
+        }
+
         if (typeof UI !== 'undefined' && UI.syncProfileUI) {
           UI.syncProfileUI();
         }
@@ -3796,11 +4052,22 @@ const Top30Leaderboard = (() => {
       });
     }
 
+    const onboardOverlay = document.getElementById('onboardingModal');
+    if (onboardOverlay) {
+      onboardOverlay.addEventListener('click', (e) => {
+        if (e.target === onboardOverlay) closeOnboardingModal();
+      });
+    }
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         const modal = document.getElementById('leaderboardModal') || document.getElementById('top30LeaderboardOverlay');
         if (modal && !modal.hidden && modal.style.display !== 'none') {
           close();
+        }
+        const oModal = document.getElementById('onboardingModal');
+        if (oModal && !oModal.hidden && oModal.style.display !== 'none') {
+          closeOnboardingModal();
         }
       }
     });
@@ -3814,6 +4081,9 @@ const Top30Leaderboard = (() => {
     open,
     close,
     setScope,
+    isProfileComplete,
+    openOnboardingModal,
+    closeOnboardingModal,
   };
 })();
 

@@ -1,9 +1,10 @@
 {
   "name": "gotime4study",
   "version": "2.0.0",
+  "type": "module",
   "description": "Aesthetic Study Timer & Free Online Focus Tracker",
   "scripts": {
-    "build": "node -c script.js && node -e \"console.log('Build validated successfully.')\"",
+    "build": "node -c script.js && node -c app.js && node build.js && node -e \"console.log('Build validated successfully.')\"",
     "start": "npx serve ."
   },
   "keywords": [

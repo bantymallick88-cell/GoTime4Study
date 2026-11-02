@@ -1351,6 +1351,62 @@
     </div>
   </div>
 
+  <!-- ══════════ Mandatory User Onboarding Modal (#onboardingModal) ══════════ -->
+  <div class="overlay" id="onboardingModal" hidden>
+    <div class="glass modal onboarding-modal">
+      <div class="modal-head">
+        <div class="onboarding-title-wrap">
+          <div class="onboard-badge">⚠️ PROFILE MANDATORY</div>
+          <h2>Global Leaderboard Onboarding</h2>
+          <p class="hint-sm">Name, Country, State, and City are strictly mandatory to participate, track, or submit your study hours.</p>
+        </div>
+        <button class="icon-btn close-btn" id="btnCloseOnboardingModal" data-close="onboardingModal" aria-label="Close Onboarding Modal">✕</button>
+      </div>
+
+      <div class="onboarding-body">
+        <form id="formOnboarding" class="onboard-form" novalidate>
+          <div class="onboard-grid">
+            <div class="form-group">
+              <label class="field-label-sm" for="onboardName">Full Name / Student Nickname <span class="req-star">*</span></label>
+              <input type="text" id="onboardName" class="txt-input sm" maxlength="28" placeholder="e.g. Alex Johnson" required />
+            </div>
+
+            <div class="form-group">
+              <label class="field-label-sm" for="onboardCountry">Country <span class="req-star">*</span></label>
+              <input type="text" id="onboardCountry" class="txt-input sm" maxlength="32" placeholder="e.g. United States 🇺🇸" required />
+            </div>
+
+            <div class="form-group">
+              <label class="field-label-sm" for="onboardState">State / Province <span class="req-star">*</span></label>
+              <input type="text" id="onboardState" class="txt-input sm" maxlength="32" placeholder="e.g. California" required />
+            </div>
+
+            <div class="form-group">
+              <label class="field-label-sm" for="onboardCity">City <span class="req-star">*</span></label>
+              <input type="text" id="onboardCity" class="txt-input sm" maxlength="32" placeholder="e.g. San Francisco" required />
+            </div>
+
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="field-label-sm" for="onboardHours">Initial Study Hours to Submit (Optional)</label>
+              <input type="number" id="onboardHours" class="txt-input sm" min="0" max="999" step="0.5" placeholder="e.g. 15.0" />
+            </div>
+          </div>
+
+          <div class="onboard-avatar-section">
+            <label class="field-label-sm" style="display:block;margin-bottom:6px;">Select Study Avatar</label>
+            <div class="avatar-mini-picker" id="onboardAvatarPicker"></div>
+          </div>
+
+          <div class="onboard-actions">
+            <button type="submit" id="btnSubmitOnboarding" class="ctrl-btn primary" style="width: 100%;">
+              <span>🚀 Save Mandatory Profile &amp; Activate Rankings</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════ Top 30 Focus Leaderboard Modal (#leaderboardModal) ══════════ -->
   <div class="overlay" id="leaderboardModal" data-alias="top30LeaderboardOverlay" hidden>
     <div class="glass modal top30-modal">
@@ -1386,30 +1442,30 @@
           <div class="reg-title-wrap">
             <span class="reg-badge">⚡ 100% FREE · NO LOGIN BARRIER</span>
             <h3 class="reg-title">Sync Your Study Hours to Global Rankings</h3>
-            <p class="hint-sm">Enter your Name, City, State, and Country to rank on the Top 30 Global Board.</p>
+            <p class="hint-sm">Name, Country, State, and City are strictly mandatory to rank on the Top 30 Global Board.</p>
           </div>
           <button type="button" class="ctrl-btn ghost small toggle-reg-btn" id="btnToggleRegForm" title="Edit Profile Details">
             <span id="toggleRegBtnText">✏️ Register / Edit Profile</span>
           </button>
         </div>
 
-        <form id="formLeaderboardReg" class="top30-reg-form" style="display: none;">
+        <form id="formLeaderboardReg" class="top30-reg-form" style="display: none;" novalidate>
           <div class="reg-inputs-grid">
             <div class="form-group">
-              <label class="field-label-sm" for="lbRegName">User Name</label>
+              <label class="field-label-sm" for="lbRegName">User Name <span class="req-star">*</span></label>
               <input type="text" id="lbRegName" class="txt-input sm" maxlength="28" placeholder="e.g. Alex Johnson" required />
             </div>
             <div class="form-group">
-              <label class="field-label-sm" for="lbRegCity">City</label>
-              <input type="text" id="lbRegCity" class="txt-input sm" maxlength="32" placeholder="e.g. San Francisco" required />
+              <label class="field-label-sm" for="lbRegCountry">Country <span class="req-star">*</span></label>
+              <input type="text" id="lbRegCountry" class="txt-input sm" maxlength="32" placeholder="e.g. United States 🇺🇸" required />
             </div>
             <div class="form-group">
-              <label class="field-label-sm" for="lbRegState">State / Province</label>
+              <label class="field-label-sm" for="lbRegState">State / Province <span class="req-star">*</span></label>
               <input type="text" id="lbRegState" class="txt-input sm" maxlength="32" placeholder="e.g. California" required />
             </div>
             <div class="form-group">
-              <label class="field-label-sm" for="lbRegCountry">Country</label>
-              <input type="text" id="lbRegCountry" class="txt-input sm" maxlength="32" placeholder="e.g. United States 🇺🇸" required />
+              <label class="field-label-sm" for="lbRegCity">City <span class="req-star">*</span></label>
+              <input type="text" id="lbRegCity" class="txt-input sm" maxlength="32" placeholder="e.g. San Francisco" required />
             </div>
             <div class="form-group">
               <label class="field-label-sm" for="lbRegHours">Submit Study Hours (Optional)</label>
@@ -1466,22 +1522,22 @@
         <p class="hint-sm">Customize your study avatar, name &amp; location. Saved in browser storage with zero login or signup needed, and automatically syncs to the Top 30 Leaderboard.</p>
 
         <div class="form-group" style="margin-top: 12px;">
-          <label class="field-label" for="profileNickInput">Full Name / Nickname</label>
-          <input type="text" id="profileNickInput" class="txt-input" maxlength="28" placeholder="e.g. FocusMaster" />
+          <label class="field-label" for="profileNickInput">Full Name / Student Nickname <span class="req-star">*</span></label>
+          <input type="text" id="profileNickInput" class="txt-input" maxlength="28" placeholder="e.g. Alex Johnson" required />
         </div>
 
         <div class="profile-geo-grid">
           <div class="form-group">
-            <label class="field-label-sm" for="profileCityInput">City</label>
-            <input type="text" id="profileCityInput" class="txt-input sm" maxlength="32" placeholder="e.g. San Francisco" />
+            <label class="field-label-sm" for="profileCountryInput">Country <span class="req-star">*</span></label>
+            <input type="text" id="profileCountryInput" class="txt-input sm" maxlength="32" placeholder="e.g. United States 🇺🇸" required />
           </div>
           <div class="form-group">
-            <label class="field-label-sm" for="profileStateInput">State / Province</label>
-            <input type="text" id="profileStateInput" class="txt-input sm" maxlength="32" placeholder="e.g. California" />
+            <label class="field-label-sm" for="profileStateInput">State / Province <span class="req-star">*</span></label>
+            <input type="text" id="profileStateInput" class="txt-input sm" maxlength="32" placeholder="e.g. California" required />
           </div>
           <div class="form-group">
-            <label class="field-label-sm" for="profileCountryInput">Country</label>
-            <input type="text" id="profileCountryInput" class="txt-input sm" maxlength="32" placeholder="e.g. United States 🇺🇸" />
+            <label class="field-label-sm" for="profileCityInput">City <span class="req-star">*</span></label>
+            <input type="text" id="profileCityInput" class="txt-input sm" maxlength="32" placeholder="e.g. San Francisco" required />
           </div>
         </div>
 
