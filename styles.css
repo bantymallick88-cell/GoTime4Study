@@ -1318,28 +1318,470 @@ header,
 .hstat-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; color: var(--text-mute); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
 .hstat-value { font-size: 1.35rem; font-weight: 800; color: #FFFFFF; font-variant-numeric: tabular-nums; }
 
-/* ── 6. Main SaaS Dashboard Grid (2-Column Layout) ───────────── */
-#layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
+/* ── 6. Main Dashboard Layout (Human-Centered Redesign) ─────── */
+#layout,
+.dashboard-main-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
 }
 
-/* ── 7. Left Column: Timer & Subjects ────────────────────────── */
-.center-col {
+/* ── 6.1 Hero Focus Section (1-Tap Immediate Action Priority) ── */
+.hero-focus-section {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  min-width: 0;
+  align-items: center;
   width: 100%;
-  max-width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  gap: 18px;
+  box-sizing: border-box;
 }
 
-/* ── 8. Right Column: Exam Countdown, Leaderboard & Console ──── */
+.hero-focus-header {
+  text-align: center;
+  width: 100%;
+  padding: 4px 12px;
+}
+
+.hero-main-title {
+  font-size: clamp(1.25rem, 3.2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.hero-main-title span {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+:root[data-theme="oled"] .hero-main-title span,
+body.theme-oled .hero-main-title span {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-main-sub {
+  font-size: 0.86rem;
+  color: var(--text-mute, #9CA3AF);
+  margin-top: 6px;
+}
+
+.hero-focus-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.hero-timer-card {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 26px 24px;
+}
+
+#btnStartPause.hero-start-btn {
+  min-width: 250px;
+  padding: 15px 36px !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  border-radius: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #FFFFFF !important;
+  border: 1px solid rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.45), 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer;
+}
+
+#btnStartPause.hero-start-btn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 0 32px rgba(16, 185, 129, 0.65), 0 6px 20px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px) scale(1.02);
+}
+
+#btnStartPause.hero-start-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+:root[data-theme="oled"] #btnStartPause.hero-start-btn,
+body.theme-oled #btnStartPause.hero-start-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 28px rgba(245, 158, 11, 0.55), 0 4px 16px rgba(0, 0, 0, 0.8) !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+:root[data-theme="oled"] #btnStartPause.hero-start-btn:hover,
+body.theme-oled #btnStartPause.hero-start-btn:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  box-shadow: 0 0 36px rgba(245, 158, 11, 0.75), 0 6px 22px rgba(0, 0, 0, 0.9) !important;
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* ── 6.2 2x2 Quick Stats Card Below Timer ─────────────────────── */
+.quick-stats-card {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  border-radius: var(--r-xl);
+  background: var(--bg-card-strong);
+  border: 1px solid var(--stroke-soft);
+  box-sizing: border-box;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.quick-stats-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--stroke-subtle);
+}
+
+.qstats-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.qstats-icon {
+  font-size: 1rem;
+}
+
+.qstats-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #10b981;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+:root[data-theme="oled"] .qstats-badge,
+body.theme-oled .qstats-badge {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.compact-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.compact-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--stroke-subtle);
+  transition: all 0.2s ease;
+  min-width: 0;
+}
+
+.compact-stat-item:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.cstat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.cstat-purple { background: rgba(139, 92, 246, 0.18); border: 1px solid rgba(139, 92, 246, 0.35); }
+.cstat-orange { background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.35); }
+.cstat-cyan   { background: rgba(6, 182, 212, 0.18); border: 1px solid rgba(6, 182, 212, 0.35); }
+.cstat-pink   { background: rgba(236, 72, 153, 0.18); border: 1px solid rgba(236, 72, 153, 0.35); }
+
+.cstat-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cstat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #A1A1AA;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cstat-val {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+/* ── 6.3 Modules Hub Section (Collapsible Accordion Hub) ────────── */
+.modules-hub-section {
+  width: 100%;
+  max-width: 860px;
+  margin: 16px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.modules-quick-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modules-quick-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.mq-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--bg-card-strong);
+  border: 1px solid var(--stroke-soft);
+  color: #A1A1AA;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.mq-tab-btn:hover {
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mq-tab-btn.active {
+  color: #FFFFFF;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+:root[data-theme="oled"] .mq-tab-btn.active,
+body.theme-oled .mq-tab-btn.active {
+  color: #FFFFFF !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.3) !important;
+}
+
+.modules-accordion-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.module-accordion-card {
+  border-radius: var(--r-xl);
+  background: var(--bg-card-strong);
+  border: 1px solid var(--stroke-soft);
+  overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.module-accordion-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.module-accordion-head:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.mhead-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.mhead-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--stroke-soft);
+  flex-shrink: 0;
+}
+
+.mhead-titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mhead-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.mhead-desc {
+  font-size: 0.76rem;
+  color: #9CA3AF;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mhead-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.mhead-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #10b981;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+:root[data-theme="oled"] .module-accordion-card .mhead-status,
+body.theme-oled .module-accordion-card .mhead-status {
+  color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.accordion-chevron {
+  font-size: 1.15rem;
+  color: #9CA3AF;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+}
+
+.module-accordion-card.open .accordion-chevron {
+  transform: rotate(180deg);
+  color: #FFFFFF;
+}
+
+.module-accordion-card.open {
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="oled"] .module-accordion-card.open,
+body.theme-oled .module-accordion-card.open {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8) !important;
+}
+
+.module-accordion-body {
+  display: none;
+  padding: 12px 18px 20px;
+  border-top: 1px solid var(--stroke-subtle);
+}
+
+.module-accordion-card.open .module-accordion-body {
+  display: block;
+  animation: accordionFadeIn 0.25s ease;
+}
+
+.module-accordion-body .subject-card,
+.module-accordion-body .ai-analytics-card,
+.module-accordion-body .exam-card,
+.module-accordion-body .local-lb-card,
+.module-accordion-body .console-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 8px 4px 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+@keyframes accordionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 7. Legacy Column Fallbacks ───────────────────────────────── */
+.center-col,
 .side-col {
   display: flex;
   flex-direction: column;
@@ -4741,8 +5183,10 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* ── 11. Responsive Layout & Mobile Auto-Fit ────────────────── */
 @media (max-width: 1040px) {
-  #layout {
-    grid-template-columns: 1fr;
+  #layout,
+  .dashboard-main-layout {
+    display: flex;
+    flex-direction: column;
     gap: 16px;
   }
   .nav-center-pill { display: none; }
@@ -4776,6 +5220,38 @@ input[type="range"]::-webkit-slider-thumb {
   #app {
     padding: 10px 10px 24px;
     gap: 14px;
+  }
+  .hero-focus-section {
+    padding: 0 4px;
+    gap: 14px;
+  }
+  .hero-timer-card {
+    padding: 18px 14px;
+  }
+  .mhead-desc {
+    display: none !important;
+  }
+  .mhead-status {
+    display: none !important;
+  }
+  .modules-quick-tabs {
+    justify-content: flex-start !important;
+    padding-bottom: 6px;
+  }
+  .compact-stats-grid {
+    gap: 8px !important;
+  }
+  .compact-stat-item {
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+  .cstat-val {
+    font-size: 1.15rem !important;
+  }
+  #btnStartPause.hero-start-btn {
+    min-width: 190px !important;
+    padding: 13px 24px !important;
+    font-size: 0.95rem !important;
   }
   .icon-btn {
     padding: 6px 10px;

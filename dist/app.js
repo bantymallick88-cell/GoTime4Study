@@ -617,7 +617,15 @@ const Timer = (() => {
     total = durationFor(m);
     left = total; running = false;
     if (card) card.classList.remove('running');
-    if (btnText) btnText.innerHTML = '▶&nbsp; Start Focus';
+    if (btnText) {
+      if (m === 'short' || m === 'long' || m === 'customBreak') {
+        btnText.innerHTML = '▶&nbsp; START BREAK';
+      } else if (m === 'stopwatch') {
+        btnText.innerHTML = '▶&nbsp; START STOPWATCH';
+      } else {
+        btnText.innerHTML = '▶&nbsp; START FOCUS SESSION';
+      }
+    }
     if (label) label.textContent = MODES[m].label;
 
     // Strict conditional visibility for #customTimerControls
@@ -691,7 +699,7 @@ const Timer = (() => {
     if (running) return;
     running = true; last = performance.now();
     if (card) card.classList.add('running');
-    if (btnText) btnText.innerHTML = '⏸&nbsp; Pause';
+    if (btnText) btnText.innerHTML = '⏸&nbsp; PAUSE';
     rafId = requestAnimationFrame(tick);
     Rooms.broadcastState();
     StrictFocus.update();
@@ -700,7 +708,7 @@ const Timer = (() => {
   function pause() {
     running = false;
     if (card) card.classList.remove('running');
-    if (btnText) btnText.innerHTML = '▶&nbsp; Resume';
+    if (btnText) btnText.innerHTML = '▶&nbsp; RESUME';
     stopLoop(); Rooms.broadcastState();
     StrictFocus.update();
   }
@@ -2147,10 +2155,13 @@ const SubjectLogger = (() => {
       input.value = activeSubj;
     }
 
+    const accSubjStatus = $('#accordionActiveSubjStatus');
+
     if (activeObj) {
       const catInfo = getCategoryInfo(activeObj.category);
       if (activeIcon) activeIcon.textContent = catInfo.icon;
       if (activeBadge) activeBadge.innerHTML = `Active: <b style="color:${activeObj.color}">${esc(activeObj.name)}</b>`;
+      if (accSubjStatus) accSubjStatus.innerHTML = `Active: <b style="color:${activeObj.color}">${esc(activeObj.name)}</b>`;
       const stats = getStatsForSubject(activeObj.name);
       if (activeMeta) {
         activeMeta.innerHTML = `Active: <b style="color:${activeObj.color}">${esc(activeObj.name)}</b> (${catInfo.name}) · Today: ${fmtMin(stats.todayMins)}`;
@@ -2158,6 +2169,7 @@ const SubjectLogger = (() => {
     } else if (activeSubj) {
       if (activeIcon) activeIcon.textContent = '📖';
       if (activeBadge) activeBadge.innerHTML = `Active: <b style="color:var(--accent-emerald)">${esc(activeSubj)}</b>`;
+      if (accSubjStatus) accSubjStatus.innerHTML = `Active: <b>${esc(activeSubj)}</b>`;
       const stats = getStatsForSubject(activeSubj);
       if (activeMeta) {
         activeMeta.innerHTML = `Active: <b>${esc(activeSubj)}</b> · Today: ${fmtMin(stats.todayMins)}`;
@@ -2165,6 +2177,7 @@ const SubjectLogger = (() => {
     } else {
       if (activeIcon) activeIcon.textContent = '📖';
       if (activeBadge) activeBadge.innerHTML = 'Active: <b>None</b>';
+      if (accSubjStatus) accSubjStatus.innerHTML = 'Active: <b>General Focus</b>';
       if (activeMeta) activeMeta.textContent = 'Select or tap a card below to focus';
     }
 
@@ -2753,27 +2766,43 @@ const UI = (() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               break;
             case 'subjects':
-              activateSideTab('panelTools');
-              const subjSection = $('.subject-card') || $('#panelTools');
-              if (subjSection) subjSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              if (typeof ModulesHub !== 'undefined') {
+                ModulesHub.openModule('moduleSubjects');
+              } else {
+                const subjSection = $('.subject-card') || $('#panelTools');
+                if (subjSection) subjSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
               break;
             case 'stats':
-              activateSideTab('panelStats');
-              const statsEl = $('#panelStats');
-              if (statsEl) statsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              if (typeof ModulesHub !== 'undefined') {
+                ModulesHub.openModule('moduleAnalytics');
+              } else {
+                activateSideTab('panelStats');
+                const statsEl = $('#panelStats');
+                if (statsEl) statsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
               break;
             case 'rooms':
+              if (typeof ModulesHub !== 'undefined') {
+                ModulesHub.openModule('moduleConsole');
+              }
               activateSideTab('panelRoom');
               const roomEl = $('#panelRoom');
               if (roomEl) roomEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
               break;
             case 'journal':
+              if (typeof ModulesHub !== 'undefined') {
+                ModulesHub.openModule('moduleConsole');
+              }
               activateSideTab('panelTools');
               const diaryEl = $('#diaryCard') || $('#panelTools');
               if (diaryEl) diaryEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
               break;
             case 'ambient':
-              overlay('ambientOverlay', true);
+              if (typeof ModulesHub !== 'undefined') {
+                ModulesHub.openModule('moduleConsole');
+              }
+              activateSideTab('panelMusic');
               break;
             case 'profile':
               openProfileModal();
@@ -4235,6 +4264,67 @@ const Top30Leaderboard = (() => {
 })();
 
 /* ════════════════════════════════════════════════════════════
+   MODULES ACCORDION & QUICK TABS HUB CONTROLLER
+   ════════════════════════════════════════════════════════════ */
+const ModulesHub = (() => {
+  function init() {
+    const quickTabs = $$('.mq-tab-btn');
+
+    // Accordion header toggle listener
+    $$('.module-accordion-head').forEach((head) => {
+      head.addEventListener('click', (e) => {
+        e.preventDefault();
+        const card = head.closest('.module-accordion-card');
+        if (!card) return;
+        const isOpen = card.classList.contains('open');
+
+        if (isOpen) {
+          card.classList.remove('open');
+          head.setAttribute('aria-expanded', 'false');
+        } else {
+          card.classList.add('open');
+          head.setAttribute('aria-expanded', 'true');
+          const cardId = card.id;
+          quickTabs.forEach((tab) => {
+            tab.classList.toggle('active', tab.dataset.target === cardId);
+          });
+        }
+      });
+    });
+
+    // Quick-jump filter tabs
+    quickTabs.forEach((tab) => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = tab.dataset.target;
+        openModule(targetId, true);
+      });
+    });
+  }
+
+  function openModule(moduleId, smoothScroll = true) {
+    const targetCard = document.getElementById(moduleId);
+    if (!targetCard) return;
+
+    targetCard.classList.add('open');
+    const head = targetCard.querySelector('.module-accordion-head');
+    if (head) head.setAttribute('aria-expanded', 'true');
+
+    $$('.mq-tab-btn').forEach((tab) => {
+      tab.classList.toggle('active', tab.dataset.target === moduleId);
+    });
+
+    if (smoothScroll) {
+      const yOffset = -70;
+      const y = targetCard.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  }
+
+  return { init, openModule };
+})();
+
+/* ════════════════════════════════════════════════════════════
    BOOT
    ════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
@@ -4258,4 +4348,5 @@ document.addEventListener('DOMContentLoaded', () => {
   safe('LocalLeaderboard.init', () => LocalLeaderboard.init());
   safe('AIStudyAnalytics.init', () => AIStudyAnalytics.init());
   safe('Top30Leaderboard.init', () => Top30Leaderboard.init());
+  safe('ModulesHub.init', () => ModulesHub.init());
 });

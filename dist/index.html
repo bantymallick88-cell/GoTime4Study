@@ -313,737 +313,872 @@
       </div>
     </aside>
 
-    <!-- ── Hero Dashboard Header ── -->
-    <section class="hero-header">
-      <div class="hero-headline">
-        <h2>Supercharge Your Focus. <span>Dominate Your Goals.</span></h2>
-      </div>
+    <!-- ── Main Dashboard Layout (Human-Centered Redesign) ── -->
+    <main id="layout" class="dashboard-main-layout">
 
-      <!-- Quick KPI Stats Ribbon -->
-      <div class="hero-stats-grid">
-        <div class="hero-stat-card">
-          <div class="hstat-icon hstat-purple">⏱️</div>
-          <div class="hstat-info">
-            <span class="hstat-label">TODAY'S FOCUS</span>
-            <span id="statToday" class="hstat-value">0m</span>
-          </div>
+      <!-- ══ HERO SECTION: 1-Tap Action Priority (Top of the Page) ══ -->
+      <section class="hero-focus-section" id="heroFocusSection">
+        
+        <div class="hero-focus-header">
+          <h2 class="hero-main-title">Supercharge Your Focus. <span>Dominate Your Goals.</span></h2>
+          <p class="hero-main-sub">Tap Start to begin your session instantly with zero distraction.</p>
         </div>
-        <div class="hero-stat-card">
-          <div class="hstat-icon hstat-orange">🔥</div>
-          <div class="hstat-info">
-            <span class="hstat-label">DAILY STREAK</span>
-            <span id="statStreak" class="hstat-value">0🔥</span>
-          </div>
-        </div>
-        <div class="hero-stat-card">
-          <div class="hstat-icon hstat-cyan">🎯</div>
-          <div class="hstat-info">
-            <span class="hstat-label">SESSIONS COMPLETED</span>
-            <span id="statSessions" class="hstat-value">0</span>
-          </div>
-        </div>
-        <div class="hero-stat-card">
-          <div class="hstat-icon hstat-pink">📊</div>
-          <div class="hstat-info">
-            <span class="hstat-label">WEEKLY TOTAL</span>
-            <span id="statWeek" class="hstat-value">0h</span>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- ── Main Dashboard Layout ── -->
-    <main id="layout">
+        <div class="hero-focus-wrapper">
+          
+          <!-- Futuristic Timer Card (Top Center) -->
+          <div class="glass timer-card hero-timer-card">
 
-      <!-- ══ Left Column : Timer & Subjects ══ -->
-      <section class="center-col">
+            <!-- Mode Selector Tabs: Focus, Short Break, Long Break, Custom, Stopwatch -->
+            <nav class="mode-tabs" role="tablist">
+              <button class="mode-tab active" data-mode="focus" data-tab="focus" role="tab">🍅 Focus</button>
+              <button class="mode-tab" data-mode="short" data-tab="short" role="tab">☕ Short Break</button>
+              <button class="mode-tab" data-mode="long" data-tab="long" role="tab">🛋️ Long Break</button>
+              <button class="mode-tab" data-mode="custom" data-tab="custom" role="tab">✨ Custom</button>
+              <button class="mode-tab" data-mode="stopwatch" data-tab="stopwatch" role="tab">⏱ Stopwatch</button>
+            </nav>
 
-        <!-- YPT-Style Subject Tracker & Manager -->
-        <div class="glass subject-card ypt-card-container">
-          <div class="subject-bar">
-            <div class="subject-icon-box" id="activeSubjIcon">📖</div>
-            <div class="active-subj-info-wrap">
-              <input id="subjectInput" class="subject-input" type="text" maxlength="40" placeholder="Active Subject (e.g. General Focus)" />
-              <span class="active-subj-sub" id="activeSubjMeta">Select or tap a card below to focus</span>
-            </div>
-            <div class="subject-bar-actions">
-              <button id="btnToggleAddSubject" class="glow-btn sm" title="Add New Subject">
-                <span>＋ Add Subject</span>
-              </button>
-              <button id="btnSubjectLog" class="glow-btn sm" title="View Detailed Subject Log">
-                <span>📊 Logs</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Add Subject Expanded Form with Color Picker & Categories -->
-          <div id="addSubjectForm" class="add-subject-form-expanded" hidden>
-            <div class="add-subj-header">
-              <div class="add-subj-badge">✨ NEW SUBJECT</div>
-              <span class="hint-sm">Customize category & color theme</span>
-            </div>
-
-            <div class="add-subj-grid">
-              <div class="form-group">
-                <label class="field-label-sm" for="newSubjectInput">Subject Name</label>
-                <input id="newSubjectInput" class="txt-input sm" type="text" maxlength="32" placeholder="e.g. Organic Chemistry, USMLE, Algorithms" />
+            <!-- Advanced Custom Timer Setup Menu (Directly between mode tabs & circular dial) -->
+            <div id="customTimerControls" class="hidden custom-setup-panel custom-timer-controls custom-timer-session-settings" data-component="custom-timer-settings" style="display: none;">
+              <div class="custom-controls-header">
+                <span class="custom-header-badge">⚙️ Custom Timer Settings</span>
+                <span class="hint-sm">Configure duration &amp; category for active session</span>
               </div>
-              
-              <div class="form-group">
-                <label class="field-label-sm" for="newSubjectCategory">Category</label>
-                <select id="newSubjectCategory" class="txt-input sm meta-select">
-                  <option value="Academics">📚 Major / Academics</option>
-                  <option value="Science">🧪 Science & Math</option>
-                  <option value="Coding">💻 Programming / Tech</option>
-                  <option value="Language">🗣️ Languages</option>
-                  <option value="Exam">🎯 Exam & Certifications</option>
-                  <option value="Creative">🎨 Arts & Creative</option>
-                  <option value="General">⚡ General Focus</option>
-                </select>
-              </div>
-            </div>
 
-            <!-- Color Palette Swatches -->
-            <div class="form-group">
-              <label class="field-label-sm">Color Badge & Theme</label>
-              <div class="color-picker-row" id="colorPickerRow">
-                <button type="button" class="color-dot-btn active" data-color="#10b981" style="--c:#10b981;" title="Emerald"></button>
-                <button type="button" class="color-dot-btn" data-color="#06b6d4" style="--c:#06b6d4;" title="Cyan"></button>
-                <button type="button" class="color-dot-btn" data-color="#8b5cf6" style="--c:#8b5cf6;" title="Purple"></button>
-                <button type="button" class="color-dot-btn" data-color="#f59e0b" style="--c:#f59e0b;" title="Amber"></button>
-                <button type="button" class="color-dot-btn" data-color="#f43f5e" style="--c:#f43f5e;" title="Rose"></button>
-                <button type="button" class="color-dot-btn" data-color="#0ea5e9" style="--c:#0ea5e9;" title="Sky"></button>
-                <button type="button" class="color-dot-btn" data-color="#84cc16" style="--c:#84cc16;" title="Lime"></button>
-                <button type="button" class="color-dot-btn" data-color="#ec4899" style="--c:#ec4899;" title="Pink"></button>
-                <label class="custom-color-btn" title="Custom color picker">
-                  <input type="color" id="customColorInput" value="#10b981" />
-                  <span class="custom-color-icon">🎨</span>
-                </label>
-              </div>
-            </div>
+              <!-- Custom Study & Break Duration Inputs (Minutes & Seconds) -->
+              <div class="custom-timer-row">
+                <div class="custom-dur-group">
+                  <span class="custom-field-title">⏱️ Custom Duration</span>
+                  <div class="custom-time-inputs">
+                    <label class="custom-time-unit" title="Study Minutes">
+                      <input type="number" id="inputCustomMinutes" min="0" max="720" value="45" placeholder="Min" aria-label="Study Minutes" />
+                      <span class="unit-label">min</span>
+                    </label>
+                    <span class="time-sep">:</span>
+                    <label class="custom-time-unit" title="Study Seconds">
+                      <input type="number" id="inputCustomSeconds" min="0" max="59" value="0" placeholder="Sec" aria-label="Study Seconds" />
+                      <span class="unit-label">sec</span>
+                    </label>
+                    <!-- Backward-compatible hidden input for legacy references -->
+                    <input type="number" id="inputCustomDuration" min="1" max="720" value="45" style="display: none;" />
+                  </div>
+                </div>
 
-            <!-- Daily Target & Actions -->
-            <div class="add-subj-bottom-row">
-              <div class="goal-input-wrap">
-                <label class="field-label-sm" for="newSubjectGoal">Daily Target (mins)</label>
-                <input id="newSubjectGoal" class="txt-input sm" type="number" min="5" max="720" value="60" />
-              </div>
-              <div class="add-subj-actions">
-                <button id="btnConfirmAddSubject" class="ctrl-btn primary small">
-                  <span>Save Subject</span>
+                <div class="custom-dur-group">
+                  <span class="custom-field-title">☕ Break Duration</span>
+                  <div class="custom-time-inputs">
+                    <label class="custom-time-unit" title="Break Minutes">
+                      <input type="number" id="inputCustomBreakDuration" min="1" max="180" value="10" placeholder="Min" aria-label="Break Minutes" />
+                      <span class="unit-label">min</span>
+                    </label>
+                    <span class="time-sep">:</span>
+                    <label class="custom-time-unit" title="Break Seconds">
+                      <input type="number" id="inputCustomBreakSeconds" min="0" max="59" value="0" placeholder="Sec" aria-label="Break Seconds" />
+                      <span class="unit-label">sec</span>
+                    </label>
+                  </div>
+                </div>
+
+                <button id="btnSetCustomDuration" class="ctrl-btn primary small" title="Apply Custom Settings">
+                  <span>✓ Apply</span>
                 </button>
-                <button id="btnCancelAddSubject" class="text-btn danger sm" title="Cancel">✕ Cancel</button>
               </div>
-            </div>
-          </div>
 
-          <!-- Vertical / Grid Subject Cards -->
-          <div class="ypt-subjects-wrap">
-            <div class="ypt-section-head">
-              <span class="chips-label">STUDY SUBJECTS · TAP TO ACTIVATE</span>
-              <span class="hint-sm" id="activeSubjectBadge">Active: <b>None</b></span>
-            </div>
-            <div id="subjectCardsList" class="ypt-cards-grid">
-              <!-- Dynamically injected subject cards with color badges, progress, & total study time -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Futuristic Timer Card -->
-        <div class="glass timer-card">
-
-          <!-- Mode Selector Tabs -->
-          <nav class="mode-tabs" role="tablist">
-            <button class="mode-tab active" data-mode="focus" data-tab="focus" role="tab">🍅 Focus</button>
-            <button class="mode-tab" data-mode="short" data-tab="short" role="tab">☕ Short Break</button>
-            <button class="mode-tab" data-mode="long" data-tab="long" role="tab">🛋️ Long Break</button>
-            <button class="mode-tab" data-mode="custom" data-tab="custom" role="tab">✨ Custom</button>
-            <button class="mode-tab" data-mode="stopwatch" data-tab="stopwatch" role="tab">⏱ Stopwatch</button>
-          </nav>
-
-          <!-- Advanced Custom Timer Setup Menu (Directly between mode tabs & circular dial) -->
-          <div id="customTimerControls" class="hidden custom-setup-panel custom-timer-controls custom-timer-session-settings" data-component="custom-timer-settings" style="display: none;">
-            <div class="custom-controls-header">
-              <span class="custom-header-badge">⚙️ Custom Timer Settings</span>
-              <span class="hint-sm">Configure duration &amp; category for active session</span>
-            </div>
-
-            <!-- Custom Study & Break Duration Inputs (Minutes & Seconds) -->
-            <div class="custom-timer-row">
-              <div class="custom-dur-group">
-                <span class="custom-field-title">⏱️ Custom Duration</span>
-                <div class="custom-time-inputs">
-                  <label class="custom-time-unit" title="Study Minutes">
-                    <input type="number" id="inputCustomMinutes" min="0" max="720" value="45" placeholder="Min" aria-label="Study Minutes" />
-                    <span class="unit-label">min</span>
-                  </label>
-                  <span class="time-sep">:</span>
-                  <label class="custom-time-unit" title="Study Seconds">
-                    <input type="number" id="inputCustomSeconds" min="0" max="59" value="0" placeholder="Sec" aria-label="Study Seconds" />
-                    <span class="unit-label">sec</span>
-                  </label>
-                  <!-- Backward-compatible hidden input for legacy references -->
-                  <input type="number" id="inputCustomDuration" min="1" max="720" value="45" style="display: none;" />
+              <!-- Category Selection Options: 'Revision', 'Test', and 'Theory Class' -->
+              <div class="custom-cfg-group">
+                <span class="custom-cfg-label">Category:</span>
+                <div class="custom-tag-pills" id="customTagPills">
+                  <button type="button" class="custom-tag-btn" data-tag="revision" title="Revision &amp; Notes Review">
+                    <span>🔄 Revision</span>
+                  </button>
+                  <button type="button" class="custom-tag-btn" data-tag="test" title="Practice Tests &amp; Problem Solving">
+                    <span>📝 Test</span>
+                  </button>
+                  <button type="button" class="custom-tag-btn active" data-tag="class" title="Theory Class &amp; Concepts">
+                    <span>📖 Theory Class</span>
+                  </button>
                 </div>
               </div>
 
-              <div class="custom-dur-group">
-                <span class="custom-field-title">☕ Break Duration</span>
-                <div class="custom-time-inputs">
-                  <label class="custom-time-unit" title="Break Minutes">
-                    <input type="number" id="inputCustomBreakDuration" min="1" max="180" value="10" placeholder="Min" aria-label="Break Minutes" />
-                    <span class="unit-label">min</span>
-                  </label>
-                  <span class="time-sep">:</span>
-                  <label class="custom-time-unit" title="Break Seconds">
-                    <input type="number" id="inputCustomBreakSeconds" min="0" max="59" value="0" placeholder="Sec" aria-label="Break Seconds" />
-                    <span class="unit-label">sec</span>
-                  </label>
+              <!-- Time Breakdown Period Toggle -->
+              <div class="custom-cfg-group">
+                <span class="custom-cfg-label">AI Telemetry Scope:</span>
+                <div class="custom-ai-scope-pills" id="customAiScopeTabs" role="tablist">
+                  <button type="button" class="custom-scope-btn active" id="btnCustomScopeWeek" data-period="weekly" role="tab" aria-selected="true">
+                    <span>📅 Weekly (7D)</span>
+                  </button>
+                  <button type="button" class="custom-scope-btn" id="btnCustomScopeMonth" data-period="monthly" role="tab" aria-selected="false">
+                    <span>🗓️ Monthly (30D)</span>
+                  </button>
                 </div>
               </div>
+            </div>
 
-              <button id="btnSetCustomDuration" class="ctrl-btn primary small" title="Apply Custom Settings">
-                <span>✓ Apply</span>
+            <!-- Futuristic Glowing Ring -->
+            <div class="ring-wrap">
+              <div class="ring-glow-aura"></div>
+              <svg class="ring" viewBox="0 0 280 280" width="280" height="280">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#10b981" />
+                    <stop offset="50%" stop-color="#f59e0b" />
+                    <stop offset="100%" stop-color="#10b981" />
+                  </linearGradient>
+                  <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="6" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <circle class="ring-track" cx="140" cy="140" r="124" />
+                <circle id="ringProgress" class="ring-fill" cx="140" cy="140" r="124" transform="rotate(-90 140 140)" />
+              </svg>
+              <div class="ring-center">
+                <div id="timerLabel" class="timer-label">Focus</div>
+                <div id="timeDisplay" class="time-display">25:00</div>
+                <div id="sessionInfo" class="session-info">Session 1 · 4 until long break</div>
+              </div>
+            </div>
+
+            <!-- Main Interactive Controls: Big Hero Start Button with Amber Glow -->
+            <div class="timer-controls">
+              <button id="btnReset" class="ctrl-btn ghost" title="Reset current session" aria-label="Reset timer">
+                <span class="ctrl-icon">↺</span>
+                <span class="ctrl-txt">Reset</span>
+              </button>
+              <button id="btnStartPause" class="ctrl-btn primary neon-glow-btn hero-start-btn" aria-label="Start or pause timer">
+                <span id="startPauseText">▶&nbsp; START FOCUS SESSION</span>
+              </button>
+              <button id="btnSkip" class="ctrl-btn ghost" title="Skip to next session" aria-label="Skip session">
+                <span class="ctrl-icon">⏭</span>
+                <span class="ctrl-txt">Skip</span>
               </button>
             </div>
 
-            <!-- Category Selection Options: 'Revision', 'Test', and 'Theory Class' -->
-            <div class="custom-cfg-group">
-              <span class="custom-cfg-label">Category:</span>
-              <div class="custom-tag-pills" id="customTagPills">
-                <button type="button" class="custom-tag-btn" data-tag="revision" title="Revision &amp; Notes Review">
-                  <span>🔄 Revision</span>
-                </button>
-                <button type="button" class="custom-tag-btn" data-tag="test" title="Practice Tests &amp; Problem Solving">
-                  <span>📝 Test</span>
-                </button>
-                <button type="button" class="custom-tag-btn active" data-tag="class" title="Theory Class &amp; Concepts">
-                  <span>📖 Theory Class</span>
-                </button>
-              </div>
+            <!-- Keyboard Shortcuts Guide -->
+            <div class="keyboard-guide">
+              <span>Keyboard shortcuts:</span>
+              <kbd>Space</kbd> Start/Pause &nbsp;·&nbsp; <kbd>R</kbd> Reset &nbsp;·&nbsp; <kbd>S</kbd> Skip
             </div>
 
-            <!-- Time Breakdown Period Toggle -->
-            <div class="custom-cfg-group">
-              <span class="custom-cfg-label">AI Telemetry Scope:</span>
-              <div class="custom-ai-scope-pills" id="customAiScopeTabs" role="tablist">
-                <button type="button" class="custom-scope-btn active" id="btnCustomScopeWeek" data-period="weekly" role="tab" aria-selected="true">
-                  <span>📅 Weekly (7D)</span>
-                </button>
-                <button type="button" class="custom-scope-btn" id="btnCustomScopeMonth" data-period="monthly" role="tab" aria-selected="false">
-                  <span>🗓️ Monthly (30D)</span>
-                </button>
-              </div>
-            </div>
           </div>
 
-          <!-- Futuristic Glowing Ring -->
-          <div class="ring-wrap">
-            <div class="ring-glow-aura"></div>
-            <svg class="ring" viewBox="0 0 280 280" width="280" height="280">
-              <defs>
-                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#10b981" />
-                  <stop offset="50%" stop-color="#f59e0b" />
-                  <stop offset="100%" stop-color="#10b981" />
-                </linearGradient>
-                <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="6" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              <circle class="ring-track" cx="140" cy="140" r="124" />
-              <circle id="ringProgress" class="ring-fill" cx="140" cy="140" r="124" transform="rotate(-90 140 140)" />
-            </svg>
-            <div class="ring-center">
-              <div id="timerLabel" class="timer-label">Focus</div>
-              <div id="timeDisplay" class="time-display">25:00</div>
-              <div id="sessionInfo" class="session-info">Session 1 · 4 until long break</div>
+          <!-- ══ COMBINE & SIMPLIFY STATS METRICS GRID (2x2 Compact Card Below Timer) ══ -->
+          <div class="glass quick-stats-card">
+            <div class="quick-stats-head">
+              <div class="qstats-title-wrap">
+                <span class="qstats-icon">⚡</span>
+                <span class="qstats-title">Focus Telemetry Overview</span>
+              </div>
+              <span class="qstats-badge">Live Sync</span>
             </div>
-          </div>
-
-          <!-- Main Interactive Controls -->
-          <div class="timer-controls">
-            <button id="btnReset" class="ctrl-btn ghost" title="Reset current session" aria-label="Reset timer">
-              <span class="ctrl-icon">↺</span>
-              <span class="ctrl-txt">Reset</span>
-            </button>
-            <button id="btnStartPause" class="ctrl-btn primary neon-glow-btn" aria-label="Start or pause timer">
-              <span id="startPauseText">▶&nbsp; Start Focus</span>
-            </button>
-            <button id="btnSkip" class="ctrl-btn ghost" title="Skip to next session" aria-label="Skip session">
-              <span class="ctrl-icon">⏭</span>
-              <span class="ctrl-txt">Skip</span>
-            </button>
-          </div>
-
-        </div>
-
-        <!-- Card 3: Smart AI Study Breakdown & Analytics (Balanced in Left Column under Timer) -->
-        <div class="glass widget-card ai-analytics-card" id="aiAnalyticsCard">
-          <div class="widget-card-head">
-            <div class="widget-icon-pill icon-emerald">🤖</div>
-            <div class="whead-text-wrap">
-              <div class="whead-title-row">
-                <h2>AI Study Breakdown & Analytics</h2>
-                <span class="ai-spark-chip" id="aiScopeStatusChip">📅 7D WEEKLY</span>
+            <div class="compact-stats-grid">
+              <div class="compact-stat-item">
+                <div class="cstat-icon cstat-purple">⏱️</div>
+                <div class="cstat-meta">
+                  <span class="cstat-label">Today</span>
+                  <span id="statToday" class="cstat-val">0m</span>
+                </div>
               </div>
-              <p class="hint-sm">Continuous telemetry balancing concept theory, active recall & test practice.</p>
-            </div>
-          </div>
-
-          <!-- Dynamic Single-Line Smart AI Suggestion Badge -->
-          <div class="ai-insight-badge" id="aiInsightBadge">
-            <span class="ai-insight-icon" id="aiInsightIcon">💡</span>
-            <span class="ai-insight-text" id="aiInsightText">💡 AI Insight: Calculate distribution...</span>
-          </div>
-
-          <!-- Clean Breakdown Progress Bars & Hours Badges -->
-          <div class="ai-breakdown-list" id="aiBreakdownList">
-            <div class="ai-tag-metric" data-tag="class">
-              <div class="ai-metric-head">
-                <span class="ai-metric-title">📖 Theory Class</span>
-                <span class="ai-metric-val" id="aiValClass">Theory: 0.0 Hours</span>
+              <div class="compact-stat-item">
+                <div class="cstat-icon cstat-orange">🔥</div>
+                <div class="cstat-meta">
+                  <span class="cstat-label">Streak</span>
+                  <span id="statStreak" class="cstat-val">0🔥</span>
+                </div>
               </div>
-              <div class="ai-progress-track">
-                <div class="ai-progress-bar bar-teal" id="aiBarClass" style="width: 0%;"></div>
+              <div class="compact-stat-item">
+                <div class="cstat-icon cstat-cyan">🎯</div>
+                <div class="cstat-meta">
+                  <span class="cstat-label">Sessions</span>
+                  <span id="statSessions" class="cstat-val">0</span>
+                </div>
               </div>
-            </div>
-
-            <div class="ai-tag-metric" data-tag="revision">
-              <div class="ai-metric-head">
-                <span class="ai-metric-title">🔄 Revision</span>
-                <span class="ai-metric-val" id="aiValRevision">Revision: 0.0 Hours</span>
-              </div>
-              <div class="ai-progress-track">
-                <div class="ai-progress-bar bar-amber" id="aiBarRevision" style="width: 0%;"></div>
-              </div>
-            </div>
-
-            <div class="ai-tag-metric" data-tag="test">
-              <div class="ai-metric-head">
-                <span class="ai-metric-title">🎯 Test</span>
-                <span class="ai-metric-val" id="aiValTest">Test: 0.0 Hours</span>
-              </div>
-              <div class="ai-progress-track">
-                <div class="ai-progress-bar bar-cyan" id="aiBarTest" style="width: 0%;"></div>
+              <div class="compact-stat-item">
+                <div class="cstat-icon cstat-pink">📊</div>
+                <div class="cstat-meta">
+                  <span class="cstat-label">This Week</span>
+                  <span id="statWeek" class="cstat-val">0h</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Total Logged Breakdown Footer -->
-          <div class="ai-card-footer">
-            <span class="hint-sm" id="aiBenchmarkHint">Ideal Benchmark: <b>40% Theory · 35% Revision · 25% Tests</b></span>
-            <span class="ai-total-focus" id="aiTotalFocusTag">Total: 0.0 Hours</span>
-          </div>
-        </div>
-
-        <div class="keyboard-guide">
-          <span>Keyboard shortcuts:</span>
-          <kbd>Space</kbd> Start/Pause &nbsp;·&nbsp; <kbd>R</kbd> Reset &nbsp;·&nbsp; <kbd>S</kbd> Skip
         </div>
       </section>
 
-      <!-- ══ Right Column : Exam Countdown, Leaderboard & Feature Console ══ -->
-      <aside class="side-col">
-
-        <!-- Card 1: Exam Countdown Timer -->
-        <div class="glass widget-card exam-card">
-          <div class="widget-card-head">
-            <div class="widget-icon-pill icon-purple">🎯</div>
-            <div>
-              <h2>Exam & Goal Countdown</h2>
-              <p class="hint-sm">Lock in your target exam date with real-time live ticker precision.</p>
-            </div>
-          </div>
-
-          <div class="exam-config-row">
-            <div class="exam-input-group">
-              <label for="examNameInput" class="field-label-sm">Exam / Milestone Name</label>
-              <input type="text" id="examNameInput" class="txt-input sm" maxlength="40" placeholder="e.g. Finals, MCAT, USMLE, SAT, Bar Exam" />
-            </div>
-            <div class="exam-input-group">
-              <label for="examDateInput" class="field-label-sm">Target Exam Date & Time</label>
-              <input type="datetime-local" id="examDateInput" class="txt-input sm" />
-            </div>
-            <div class="exam-btn-group">
-              <button id="btnSetExam" class="ctrl-btn primary small">Set Countdown</button>
-              <button id="btnClearExam" class="text-btn danger sm" title="Reset Exam Countdown">✕ Reset</button>
-            </div>
-          </div>
-
-          <div id="examCountdownDisplay" class="exam-countdown-display">
-            <div class="exam-target-info">
-              <span class="exam-target-badge" id="examTargetLabel">🎯 Target: Semester Finals</span>
-              <span class="exam-date-text" id="examTargetDateText">No target exam configured yet</span>
-            </div>
-            
-            <div class="countdown-grid" id="countdownGrid">
-              <div class="countdown-unit">
-                <span class="c-val" id="cdDays">00</span>
-                <span class="c-lbl">DAYS</span>
-              </div>
-              <div class="countdown-sep">:</div>
-              <div class="countdown-unit">
-                <span class="c-val" id="cdHours">00</span>
-                <span class="c-lbl">HOURS</span>
-              </div>
-              <div class="countdown-sep">:</div>
-              <div class="countdown-unit">
-                <span class="c-val" id="cdMins">00</span>
-                <span class="c-lbl">MINS</span>
-              </div>
-              <div class="countdown-sep">:</div>
-              <div class="countdown-unit">
-                <span class="c-val" id="cdSecs">00</span>
-                <span class="c-lbl">SECS</span>
-              </div>
-            </div>
-          </div>
+      <!-- ══ ACCORDION / TABBED ARCHITECTURE FOR ADVANCED FEATURES ══ -->
+      <section class="modules-hub-section" id="modulesHub">
+        
+        <!-- Quick Jump Filter Tabs -->
+        <div class="modules-quick-tabs" role="tablist" aria-label="Feature modules navigation">
+          <button type="button" class="mq-tab-btn active" data-target="moduleSubjects">
+            <span>📖</span> Subjects
+          </button>
+          <button type="button" class="mq-tab-btn" data-target="moduleAnalytics">
+            <span>🤖</span> AI Analytics
+          </button>
+          <button type="button" class="mq-tab-btn" data-target="moduleExam">
+            <span>🎯</span> Exam Countdown
+          </button>
+          <button type="button" class="mq-tab-btn" data-target="moduleLeaderboard">
+            <span>🏆</span> Leaderboard
+          </button>
+          <button type="button" class="mq-tab-btn" data-target="moduleConsole">
+            <span>🎧</span> Audio &amp; Tools
+          </button>
         </div>
 
-        <!-- Card 2: Local Focus Leaderboard & Milestone Rank -->
-        <div class="glass widget-card local-lb-card">
-          <div class="widget-card-head">
-            <div class="widget-icon-pill icon-cyan">🏆</div>
-            <div style="flex: 1; min-width: 0;">
-              <h2>Local Mastery Leaderboard</h2>
-              <p class="hint-sm">Your private offline ranking across subjects & milestone focus tiers.</p>
-            </div>
-            <button class="glow-btn sm" id="btnOpenTop30Leaderboard" title="Open Global Top 30 Leaderboard" aria-label="Open Top 30 Leaderboard">
-              <span>🏆 Top 30 Ranks</span>
+        <div class="modules-accordion-container">
+
+          <!-- ── Accordion Card 1: Subject Selector & Custom Routine ── -->
+          <div class="glass module-accordion-card open" id="moduleSubjects" data-module="subjects">
+            <button type="button" class="module-accordion-head" aria-expanded="true" aria-controls="moduleSubjectsBody">
+              <div class="mhead-left">
+                <span class="mhead-icon">📖</span>
+                <div class="mhead-titles">
+                  <h3 class="mhead-title">Subject Selector &amp; Custom Routine</h3>
+                  <span class="mhead-desc">Track active subjects, set daily time targets, &amp; color-code focus</span>
+                </div>
+              </div>
+              <div class="mhead-right">
+                <span class="mhead-status" id="accordionActiveSubjStatus">Active: General Focus</span>
+                <span class="accordion-chevron">▾</span>
+              </div>
             </button>
-          </div>
+            <div class="module-accordion-body" id="moduleSubjectsBody">
+              
+              <!-- YPT-Style Subject Tracker & Manager -->
+              <div class="subject-card ypt-card-container">
+                <div class="subject-bar">
+                  <div class="subject-icon-box" id="activeSubjIcon">📖</div>
+                  <div class="active-subj-info-wrap">
+                    <input id="subjectInput" class="subject-input" type="text" maxlength="40" placeholder="Active Subject (e.g. General Focus)" />
+                    <span class="active-subj-sub" id="activeSubjMeta">Select or tap a card below to focus</span>
+                  </div>
+                  <div class="subject-bar-actions">
+                    <button id="btnToggleAddSubject" class="glow-btn sm" title="Add New Subject">
+                      <span>＋ Add Subject</span>
+                    </button>
+                    <button id="btnSubjectLog" class="glow-btn sm" title="View Detailed Subject Log">
+                      <span>📊 Logs</span>
+                    </button>
+                  </div>
+                </div>
 
-          <div class="local-rank-banner">
-            <div class="lrank-badge-wrap">
-              <span class="lrank-avatar" id="localRankAvatar">🦉</span>
-              <div class="lrank-info">
-                <span class="lrank-tier" id="localRankTier">💎 Diamond Scholar</span>
-                <span class="lrank-sub" id="localRankSummary">Rank #1 · Local Study Vault</span>
-              </div>
-            </div>
-            <div class="lrank-stat-pill">
-              <span class="lrank-label">LIFETIME FOCUS</span>
-              <span class="lrank-val" id="localLifetimeFocus">0h</span>
-            </div>
-          </div>
+                <!-- Add Subject Expanded Form with Color Picker & Categories -->
+                <div id="addSubjectForm" class="add-subject-form-expanded" hidden>
+                  <div class="add-subj-header">
+                    <div class="add-subj-badge">✨ NEW SUBJECT</div>
+                    <span class="hint-sm">Customize category &amp; color theme</span>
+                  </div>
 
-          <div class="local-subject-rank-wrap">
-            <div class="panel-header-row">
-              <span class="chips-label">TOP STUDY SUBJECTS</span>
-              <span class="hint-sm">Auto-calculated from diary & sessions</span>
-            </div>
-            <ul id="localSubjectRankList" class="local-subject-ranks">
-              <!-- Dynamically populated from LocalStorage subject logs -->
-            </ul>
-          </div>
-        </div>
+                  <div class="add-subj-grid">
+                    <div class="form-group">
+                      <label class="field-label-sm" for="newSubjectInput">Subject Name</label>
+                      <input id="newSubjectInput" class="txt-input sm" type="text" maxlength="32" placeholder="e.g. Organic Chemistry, USMLE, Algorithms" />
+                    </div>
+                    
+                    <div class="form-group">
+                      <label class="field-label-sm" for="newSubjectCategory">Category</label>
+                      <select id="newSubjectCategory" class="txt-input sm meta-select">
+                        <option value="Academics">📚 Major / Academics</option>
+                        <option value="Science">🧪 Science &amp; Math</option>
+                        <option value="Coding">💻 Programming / Tech</option>
+                        <option value="Language">🗣️ Languages</option>
+                        <option value="Exam">🎯 Exam &amp; Certifications</option>
+                        <option value="Creative">🎨 Arts &amp; Creative</option>
+                        <option value="General">⚡ General Focus</option>
+                      </select>
+                    </div>
+                  </div>
 
-        <!-- Card 4: Feature Console (Audio, Rooms, Analytics, Journal, Badges) -->
-        <div class="glass console-card">
-          <!-- Console Tab Selector -->
-          <nav class="side-tabs" role="tablist">
-          <button class="side-tab active" data-panel="panelMusic" role="tab">
-            <span class="tab-ico">🎧</span>
-            <span>Audio</span>
-          </button>
-          <button class="side-tab" data-panel="panelRoom" role="tab">
-            <span class="tab-ico">👥</span>
-            <span>Rooms</span>
-          </button>
-          <button class="side-tab" data-panel="panelStats" role="tab">
-            <span class="tab-ico">📊</span>
-            <span>Analytics</span>
-          </button>
-          <button class="side-tab" data-panel="panelTools" role="tab">
-            <span class="tab-ico">🔐</span>
-            <span>Journal</span>
-          </button>
-          <button class="side-tab" data-panel="panelAwards" role="tab">
-            <span class="tab-ico">🏆</span>
-            <span>Badges</span>
-          </button>
-        </nav>
+                  <!-- Color Palette Swatches -->
+                  <div class="form-group">
+                    <label class="field-label-sm">Color Badge &amp; Theme</label>
+                    <div class="color-picker-row" id="colorPickerRow">
+                      <button type="button" class="color-dot-btn active" data-color="#10b981" style="--c:#10b981;" title="Emerald"></button>
+                      <button type="button" class="color-dot-btn" data-color="#06b6d4" style="--c:#06b6d4;" title="Cyan"></button>
+                      <button type="button" class="color-dot-btn" data-color="#8b5cf6" style="--c:#8b5cf6;" title="Purple"></button>
+                      <button type="button" class="color-dot-btn" data-color="#f59e0b" style="--c:#f59e0b;" title="Amber"></button>
+                      <button type="button" class="color-dot-btn" data-color="#f43f5e" style="--c:#f43f5e;" title="Rose"></button>
+                      <button type="button" class="color-dot-btn" data-color="#0ea5e9" style="--c:#0ea5e9;" title="Sky"></button>
+                      <button type="button" class="color-dot-btn" data-color="#84cc16" style="--c:#84cc16;" title="Lime"></button>
+                      <button type="button" class="color-dot-btn" data-color="#ec4899" style="--c:#ec4899;" title="Pink"></button>
+                      <label class="custom-color-btn" title="Custom color picker">
+                        <input type="color" id="customColorInput" value="#10b981" />
+                        <span class="custom-color-icon">🎨</span>
+                      </label>
+                    </div>
+                  </div>
 
-        <!-- ── 1. Audio & Music Panel ── -->
-        <section id="panelMusic" class="panel active">
-          <div class="panel-header-row">
-            <h2>🎧 Ambient Sound Studio</h2>
-            <button id="btnMixStop" class="text-btn danger sm">■ Stop all</button>
-          </div>
-          <p class="hint-sm">Binaural procedural soundscapes for alpha wave focus.</p>
-          <div class="mix-grid" id="mixGrid"><!-- Ambient sound sliders injected --></div>
+                  <!-- Daily Target & Actions -->
+                  <div class="add-subj-bottom-row">
+                    <div class="goal-input-wrap">
+                      <label class="field-label-sm" for="newSubjectGoal">Daily Target (mins)</label>
+                      <input id="newSubjectGoal" class="txt-input sm" type="number" min="5" max="720" value="60" />
+                    </div>
+                    <div class="add-subj-actions">
+                      <button id="btnConfirmAddSubject" class="ctrl-btn primary small">
+                        <span>Save Subject</span>
+                      </button>
+                      <button id="btnCancelAddSubject" class="text-btn danger sm" title="Cancel">✕ Cancel</button>
+                    </div>
+                  </div>
+                </div>
 
-          <div class="section-divider"></div>
-
-          <h2>🎵 Your Local Music</h2>
-          <div class="upload-zone" id="uploadZone">
-            <input type="file" id="audioFile" accept="audio/*" multiple hidden />
-            <div class="upload-icon">⚡</div>
-            <p>Drop audio files or <b>browse</b> local tracks</p>
-            <p class="hint-sm">Plays entirely offline in your browser</p>
-          </div>
-          <audio id="customPlayer" controls hidden></audio>
-          <ul id="playlist" class="playlist"></ul>
-
-          <div class="section-divider"></div>
-
-          <h2>🟢 Spotify Integration</h2>
-          <div class="spotify-row">
-            <input id="spotifyUrl" type="url" placeholder="Paste Spotify playlist, album, or track URL…" />
-            <button id="btnSpotify" class="ctrl-btn primary small">Embed</button>
-          </div>
-          <div id="spotifyEmbed" class="spotify-embed"></div>
-        </section>
-
-        <!-- ── 2. Co-Study Rooms Panel (YPT Style) ── -->
-        <section id="panelRoom" class="panel">
-          <!-- Room Lobby -->
-          <div id="roomLobby">
-            <div class="panel-header-row">
-              <h2>👥 Co-Study Live Rooms</h2>
-              <span class="ypt-live-pulse-badge">🔴 P2P LIVE SYNC</span>
-            </div>
-            <p class="hint-sm">Study together in real-time. Share room codes across browsers & tabs with instant live status syncing.</p>
-            
-            <div class="form-group" style="margin-top: 12px;">
-              <label class="field-label" for="nicknameInput">Your Nickname</label>
-              <input id="nicknameInput" class="txt-input" type="text" maxlength="16" placeholder="e.g. FocusMaster" />
-            </div>
-
-            <p class="field-label">Choose Study Avatar</p>
-            <div id="avatarPicker" class="avatar-picker"></div>
-
-            <div class="room-actions-grid">
-              <button id="btnCreateRoom" class="ctrl-btn primary small">＋ Create New Room</button>
-              <div class="join-row">
-                <input id="joinCode" class="txt-input" type="text" maxlength="6" placeholder="ROOM CODE" />
-                <button id="btnJoinRoom" class="ctrl-btn cyan small">Join Room</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Active Room View (YPT Style) -->
-          <div id="roomView" hidden>
-            <div class="ypt-room-header-card">
-              <div class="room-head">
-                <div>
-                  <span class="field-label-sm">ACTIVE STUDY ROOM</span>
-                  <div class="room-code-row">
-                    <span id="roomCode" class="room-code">—</span>
-                    <button id="btnCopyCode" class="icon-btn sm" title="Copy room code">📋 Copy</button>
-                    <button id="btnLeaveRoom" class="text-btn danger sm">Leave Room</button>
+                <!-- Vertical / Grid Subject Cards -->
+                <div class="ypt-subjects-wrap">
+                  <div class="ypt-section-head">
+                    <span class="chips-label">STUDY SUBJECTS · TAP TO ACTIVATE</span>
+                    <span class="hint-sm" id="activeSubjectBadge">Active: <b>None</b></span>
+                  </div>
+                  <div id="subjectCardsList" class="ypt-cards-grid">
+                    <!-- Dynamically injected subject cards with color badges, progress, & total study time -->
                   </div>
                 </div>
               </div>
 
-              <!-- Top Status Summary Bar: Total Studying • On Break • Offline -->
-              <div class="ypt-room-topbar" id="roomTopBar">
-                <div class="ypt-status-pill pill-studying">
-                  <span class="status-indicator-dot dot-studying"></span>
-                  <span class="status-count-text"><strong id="countStudying">0</strong> Studying 🔥</span>
-                </div>
-                <div class="ypt-status-pill pill-break">
-                  <span class="status-indicator-dot dot-break"></span>
-                  <span class="status-count-text"><strong id="countBreak">0</strong> On Break ☕</span>
-                </div>
-                <div class="ypt-status-pill pill-offline">
-                  <span class="status-indicator-dot dot-offline"></span>
-                  <span class="status-count-text"><strong id="countOffline">0</strong> Offline 💤</span>
+            </div>
+          </div>
+
+          <!-- ── Accordion Card 2: AI Study Analytics & Benchmark Progress ── -->
+          <div class="glass module-accordion-card" id="moduleAnalytics" data-module="analytics">
+            <button type="button" class="module-accordion-head" aria-expanded="false" aria-controls="moduleAnalyticsBody">
+              <div class="mhead-left">
+                <span class="mhead-icon">🤖</span>
+                <div class="mhead-titles">
+                  <h3 class="mhead-title">AI Study Analytics &amp; Benchmark Progress</h3>
+                  <span class="mhead-desc">Continuous telemetry balancing concept theory, active recall &amp; test practice</span>
                 </div>
               </div>
-            </div>
-
-            <!-- Connected Room Members YPT Cards Grid -->
-            <div class="ypt-room-members-section">
-              <div class="panel-header-row" style="margin-bottom: 8px;">
-                <span class="field-label">STUDY MEMBERS · REAL-TIME SYNC</span>
-                <span class="hint-sm" id="roomMemberCount">1 Member</span>
+              <div class="mhead-right">
+                <span class="mhead-status">Telemetry</span>
+                <span class="accordion-chevron">▾</span>
               </div>
-              
-              <div id="memberList" class="ypt-member-cards-grid">
-                <!-- Dynamically injected YPT member cards -->
-              </div>
-              <p class="hint-sm" id="roomNote" style="margin-top:10px;text-align:center;">⚡ Real-time timer & active subject sync across tabs & browsers active.</p>
-            </div>
-          </div>
-
-          <div class="section-divider"></div>
-
-          <!-- Leaderboard -->
-          <div class="panel-header-row">
-            <h2>🏅 Focus Leaderboard</h2>
-            <span class="chip" id="lbScope">Weekly</span>
-          </div>
-          <div class="seg" id="lbSeg">
-            <button data-scope="week" class="active">Week</button>
-            <button data-scope="month">Month</button>
-            <button data-scope="all">All-time</button>
-          </div>
-          <ol id="leaderboard" class="leaderboard"></ol>
-        </section>
-
-        <!-- ── 3. Deep Analytics Panel ── -->
-        <section id="panelStats" class="panel">
-          <h2>📊 Deep Focus Analytics</h2>
-          <p class="hint-sm">Data-driven performance metrics & time tracking.</p>
-
-          <div class="stat-cards">
-            <div class="stat-card">
-              <span class="sc-label">TODAY</span>
-              <span id="kpiToday" class="sc-value">0m</span>
-            </div>
-            <div class="stat-card">
-              <span class="sc-label">THIS WEEK</span>
-              <span id="kpiWeek" class="sc-value">0h</span>
-            </div>
-            <div class="stat-card">
-              <span class="sc-label">THIS MONTH</span>
-              <span id="kpiMonth" class="sc-value">0h</span>
-            </div>
-            <div class="stat-card">
-              <span class="sc-label">ALL-TIME</span>
-              <span id="kpiTotal" class="sc-value">0h</span>
-            </div>
-          </div>
-
-          <div class="chart-header-row">
-            <span class="field-label">Focus Distribution</span>
-            <div class="seg sm" id="chartSeg">
-              <button data-range="7" class="active">7D</button>
-              <button data-range="14">14D</button>
-              <button data-range="30">30D</button>
-            </div>
-          </div>
-          <div class="chart-wrap">
-            <canvas id="statsChart"></canvas>
-          </div>
-
-          <div class="section-divider"></div>
-
-          <!-- Subject Breakdown -->
-          <h2>📖 Subject Time Breakdown</h2>
-          <div id="subjectBreakdown" class="subject-breakdown"></div>
-        </section>
-
-        <!-- ── 4. Personal Diary Panel (PIN Protected + Strict Mode) ── -->
-        <section id="panelTools" class="panel">
-
-          <!-- ── Clean "My Personal Diary" Card (when locked) ── -->
-          <div id="journalLockView" class="diary-cover-card">
-            <div class="diary-cover-glow"></div>
-            <div class="diary-cover-icon-wrap">
-              <span class="diary-cover-icon">📖</span>
-              <span class="diary-lock-badge">🔒</span>
-            </div>
-            <div class="diary-cover-info">
-              <h3>My Personal Diary</h3>
-              <p class="hint-sm">Private, password-protected journal for your daily thoughts, mood logs, study reflections & milestones.</p>
-            </div>
-            <div class="diary-feature-tags">
-              <span class="d-tag">🔒 PIN Protected</span>
-              <span class="d-tag">🎨 Color Themes</span>
-              <span class="d-tag">🧠 Study Tags</span>
-              <span class="d-tag">✨ 100% Private</span>
-            </div>
-            <button id="btnOpenDiaryPinModal" class="ctrl-btn primary neon-glow-btn">
-              <span>🔓 Open My Diary</span>
             </button>
-          </div>
-
-          <!-- ── Unlocked Diary View ── -->
-          <div id="journalContentView" class="journal-content-view" hidden>
-            <div class="panel-header-row">
-              <h2>📖 My Personal Diary</h2>
-              <div class="journal-head-actions">
-                <button id="btnOpenPinModal" class="icon-btn sm" title="Change Security PIN">🔑 PIN</button>
-                <button id="btnLockJournal" class="ctrl-btn ghost small" title="Lock Diary">🔒 Lock</button>
-              </div>
-            </div>
-
-            <!-- Note Composer Form -->
-            <div class="journal-composer">
-              <input id="journalTitle" class="txt-input" type="text" maxlength="70" placeholder="Entry Title (e.g. Calculus Breakthrough, Life Insight, Daily Goal)" />
+            <div class="module-accordion-body" id="moduleAnalyticsBody">
               
-              <div class="journal-meta-row">
-                <select id="journalCategory" class="txt-input meta-select" title="Study & Reflection Tag">
-                  <option value="🧠 Study Reflection">🧠 Study Reflection</option>
-                  <option value="💡 Breakthrough Insight">💡 Breakthrough Insight</option>
-                  <option value="🎯 Goal & Milestone">🎯 Goal & Milestone</option>
-                  <option value="🌱 Personal Life">🌱 Personal Life</option>
-                  <option value="❤️ Daily Gratitude">❤️ Daily Gratitude</option>
-                  <option value="⚠️ Mistake & Lesson">⚠️ Mistake & Lesson</option>
-                  <option value="💭 Deep Thoughts">💭 Deep Thoughts</option>
-                  <option value="🚀 Creative Idea">🚀 Creative Idea</option>
-                </select>
+              <!-- Smart AI Study Breakdown & Analytics -->
+              <div class="widget-card ai-analytics-card" id="aiAnalyticsCard">
+                <div class="widget-card-head">
+                  <div class="widget-icon-pill icon-emerald">🤖</div>
+                  <div class="whead-text-wrap">
+                    <div class="whead-title-row">
+                      <h2>AI Study Breakdown &amp; Analytics</h2>
+                      <span class="ai-spark-chip" id="aiScopeStatusChip">📅 7D WEEKLY</span>
+                    </div>
+                    <p class="hint-sm">Continuous telemetry balancing concept theory, active recall &amp; test practice.</p>
+                  </div>
+                </div>
 
-                <select id="journalMood" class="txt-input meta-select" title="Mood Selector">
-                  <option value="🌟 Inspired">🌟 Inspired</option>
-                  <option value="🧘 Calm & Focused">🧘 Calm & Focused</option>
-                  <option value="💡 Breakthrough">💡 Breakthrough</option>
-                  <option value="😊 Grateful & Happy">😊 Grateful & Happy</option>
-                  <option value="⚡ High Energy">⚡ High Energy</option>
-                  <option value="🌧️ Reflective">🌧️ Reflective</option>
-                  <option value="🔥 Unstoppable Flow">🔥 Unstoppable</option>
-                  <option value="😴 Tired but Proud">😴 Tired but Proud</option>
-                </select>
+                <!-- Dynamic Single-Line Smart AI Suggestion Badge -->
+                <div class="ai-insight-badge" id="aiInsightBadge">
+                  <span class="ai-insight-icon" id="aiInsightIcon">💡</span>
+                  <span class="ai-insight-text" id="aiInsightText">💡 AI Insight: Calculate distribution...</span>
+                </div>
 
-                <select id="journalColor" class="txt-input meta-select theme-select" title="Custom Color Theme">
-                  <option value="violet">🟣 Midnight Violet</option>
-                  <option value="cyan">🔵 Electric Cyan</option>
-                  <option value="pink">🌸 Rose Quartz</option>
-                  <option value="emerald">🟢 Emerald Sage</option>
-                  <option value="amber">🟡 Sunset Amber</option>
-                  <option value="cosmic">🌌 Cosmic Indigo</option>
-                </select>
+                <!-- Clean Breakdown Progress Bars & Hours Badges -->
+                <div class="ai-breakdown-list" id="aiBreakdownList">
+                  <div class="ai-tag-metric" data-tag="class">
+                    <div class="ai-metric-head">
+                      <span class="ai-metric-title">📖 Theory Class</span>
+                      <span class="ai-metric-val" id="aiValClass">Theory: 0.0 Hours</span>
+                    </div>
+                    <div class="ai-progress-track">
+                      <div class="ai-progress-bar bar-teal" id="aiBarClass" style="width: 0%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="ai-tag-metric" data-tag="revision">
+                    <div class="ai-metric-head">
+                      <span class="ai-metric-title">🔄 Revision</span>
+                      <span class="ai-metric-val" id="aiValRevision">Revision: 0.0 Hours</span>
+                    </div>
+                    <div class="ai-progress-track">
+                      <div class="ai-progress-bar bar-amber" id="aiBarRevision" style="width: 0%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="ai-tag-metric" data-tag="test">
+                    <div class="ai-metric-head">
+                      <span class="ai-metric-title">🎯 Test</span>
+                      <span class="ai-metric-val" id="aiValTest">Test: 0.0 Hours</span>
+                    </div>
+                    <div class="ai-progress-track">
+                      <div class="ai-progress-bar bar-cyan" id="aiBarTest" style="width: 0%;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total Logged Breakdown Footer -->
+                <div class="ai-card-footer">
+                  <span class="hint-sm" id="aiBenchmarkHint">Ideal Benchmark: <b>40% Theory · 35% Revision · 25% Tests</b></span>
+                  <span class="ai-total-focus" id="aiTotalFocusTag">Total: 0.0 Hours</span>
+                </div>
               </div>
 
-              <textarea id="journalText" class="txt-input journal-textarea" maxlength="1500" placeholder="What's on your mind? Record your study reflections, breakthroughs, mindset shifts, or personal lessons..."></textarea>
+            </div>
+          </div>
+
+          <!-- ── Accordion Card 3: Semester Exam Countdown Timer ── -->
+          <div class="glass module-accordion-card" id="moduleExam" data-module="exam">
+            <button type="button" class="module-accordion-head" aria-expanded="false" aria-controls="moduleExamBody">
+              <div class="mhead-left">
+                <span class="mhead-icon">🎯</span>
+                <div class="mhead-titles">
+                  <h3 class="mhead-title">Semester Exam Countdown Timer</h3>
+                  <span class="mhead-desc">Lock in your target exam date with real-time live ticker precision</span>
+                </div>
+              </div>
+              <div class="mhead-right">
+                <span class="mhead-status">Live Countdown</span>
+                <span class="accordion-chevron">▾</span>
+              </div>
+            </button>
+            <div class="module-accordion-body" id="moduleExamBody">
               
-              <div class="journal-form-actions">
-                <button id="btnSaveJournal" class="ctrl-btn primary small">＋ Save Diary Entry</button>
-                <button id="btnResetJournal" class="text-btn danger sm">Clear text</button>
+              <!-- Card: Exam Countdown Timer -->
+              <div class="widget-card exam-card">
+                <div class="widget-card-head">
+                  <div class="widget-icon-pill icon-purple">🎯</div>
+                  <div>
+                    <h2>Exam &amp; Goal Countdown</h2>
+                    <p class="hint-sm">Lock in your target exam date with real-time live ticker precision.</p>
+                  </div>
+                </div>
+
+                <div class="exam-config-row">
+                  <div class="exam-input-group">
+                    <label for="examNameInput" class="field-label-sm">Exam / Milestone Name</label>
+                    <input type="text" id="examNameInput" class="txt-input sm" maxlength="40" placeholder="e.g. Finals, MCAT, USMLE, SAT, Bar Exam" />
+                  </div>
+                  <div class="exam-input-group">
+                    <label for="examDateInput" class="field-label-sm">Target Exam Date &amp; Time</label>
+                    <input type="datetime-local" id="examDateInput" class="txt-input sm" />
+                  </div>
+                  <div class="exam-btn-group">
+                    <button id="btnSetExam" class="ctrl-btn primary small">Set Countdown</button>
+                    <button id="btnClearExam" class="text-btn danger sm" title="Reset Exam Countdown">✕ Reset</button>
+                  </div>
+                </div>
+
+                <div id="examCountdownDisplay" class="exam-countdown-display">
+                  <div class="exam-target-info">
+                    <span class="exam-target-badge" id="examTargetLabel">🎯 Target: Semester Finals</span>
+                    <span class="exam-date-text" id="examTargetDateText">No target exam configured yet</span>
+                  </div>
+                  
+                  <div class="countdown-grid" id="countdownGrid">
+                    <div class="countdown-unit">
+                      <span class="c-val" id="cdDays">00</span>
+                      <span class="c-lbl">DAYS</span>
+                    </div>
+                    <div class="countdown-sep">:</div>
+                    <div class="countdown-unit">
+                      <span class="c-val" id="cdHours">00</span>
+                      <span class="c-lbl">HOURS</span>
+                    </div>
+                    <div class="countdown-sep">:</div>
+                    <div class="countdown-unit">
+                      <span class="c-val" id="cdMins">00</span>
+                      <span class="c-lbl">MINS</span>
+                    </div>
+                    <div class="countdown-sep">:</div>
+                    <div class="countdown-unit">
+                      <span class="c-val" id="cdSecs">00</span>
+                      <span class="c-lbl">SECS</span>
+                    </div>
+                  </div>
+                </div>
               </div>
+
             </div>
+          </div>
 
-            <!-- Search & Filters -->
-            <div class="journal-filter-bar">
-              <input id="journalSearch" class="txt-input sm" type="text" placeholder="🔍 Search reflections, tags, moods..." />
-              <span id="journalCount" class="chip">0 entries</span>
+          <!-- ── Accordion Card 4: Local Mastery Leaderboard ── -->
+          <div class="glass module-accordion-card" id="moduleLeaderboard" data-module="leaderboard">
+            <button type="button" class="module-accordion-head" aria-expanded="false" aria-controls="moduleLeaderboardBody">
+              <div class="mhead-left">
+                <span class="mhead-icon">🏆</span>
+                <div class="mhead-titles">
+                  <h3 class="mhead-title">Local Mastery Leaderboard</h3>
+                  <span class="mhead-desc">Your private offline ranking across subjects &amp; milestone focus tiers</span>
+                </div>
+              </div>
+              <div class="mhead-right">
+                <span class="mhead-status">Milestone Tiers</span>
+                <span class="accordion-chevron">▾</span>
+              </div>
+            </button>
+            <div class="module-accordion-body" id="moduleLeaderboardBody">
+              
+              <!-- Card: Local Focus Leaderboard & Milestone Rank -->
+              <div class="widget-card local-lb-card">
+                <div class="widget-card-head">
+                  <div class="widget-icon-pill icon-cyan">🏆</div>
+                  <div style="flex: 1; min-width: 0;">
+                    <h2>Local Mastery Leaderboard</h2>
+                    <p class="hint-sm">Your private offline ranking across subjects &amp; milestone focus tiers.</p>
+                  </div>
+                  <button class="glow-btn sm" id="btnOpenTop30Leaderboard" title="Open Global Top 30 Leaderboard" aria-label="Open Top 30 Leaderboard">
+                    <span>🏆 Top 30 Ranks</span>
+                  </button>
+                </div>
+
+                <div class="local-rank-banner">
+                  <div class="lrank-badge-wrap">
+                    <span class="lrank-avatar" id="localRankAvatar">🦉</span>
+                    <div class="lrank-info">
+                      <span class="lrank-tier" id="localRankTier">💎 Diamond Scholar</span>
+                      <span class="lrank-sub" id="localRankSummary">Rank #1 · Local Study Vault</span>
+                    </div>
+                  </div>
+                  <div class="lrank-stat-pill">
+                    <span class="lrank-label">LIFETIME FOCUS</span>
+                    <span class="lrank-val" id="localLifetimeFocus">0h</span>
+                  </div>
+                </div>
+
+                <div class="local-subject-rank-wrap">
+                  <div class="panel-header-row">
+                    <span class="chips-label">TOP STUDY SUBJECTS</span>
+                    <span class="hint-sm">Auto-calculated from diary &amp; sessions</span>
+                  </div>
+                  <ul id="localSubjectRankList" class="local-subject-ranks">
+                    <!-- Dynamically populated from LocalStorage subject logs -->
+                  </ul>
+                </div>
+              </div>
+
             </div>
-
-            <!-- Notes List -->
-            <ul id="journalList" class="journal-list"></ul>
           </div>
 
-          <div class="section-divider"></div>
+          <!-- ── Accordion Card 5: Feature Console (Audio, Rooms, Analytics, Journal, Badges) ── -->
+          <div class="glass module-accordion-card" id="moduleConsole" data-module="console">
+            <button type="button" class="module-accordion-head" aria-expanded="false" aria-controls="moduleConsoleBody">
+              <div class="mhead-left">
+                <span class="mhead-icon">🎧</span>
+                <div class="mhead-titles">
+                  <h3 class="mhead-title">Ambient Audio, Live Rooms &amp; Diary</h3>
+                  <span class="mhead-desc">Procedural soundscapes, P2P live study rooms, charts &amp; locked diary</span>
+                </div>
+              </div>
+              <div class="mhead-right">
+                <span class="mhead-status">5 Study Tools</span>
+                <span class="accordion-chevron">▾</span>
+              </div>
+            </button>
+            <div class="module-accordion-body" id="moduleConsoleBody">
+              
+              <div class="console-card">
+                <!-- Console Tab Selector -->
+                <nav class="side-tabs" role="tablist">
+                  <button class="side-tab active" data-panel="panelMusic" role="tab">
+                    <span class="tab-ico">🎧</span>
+                    <span>Audio</span>
+                  </button>
+                  <button class="side-tab" data-panel="panelRoom" role="tab">
+                    <span class="tab-ico">👥</span>
+                    <span>Rooms</span>
+                  </button>
+                  <button class="side-tab" data-panel="panelStats" role="tab">
+                    <span class="tab-ico">📊</span>
+                    <span>Analytics</span>
+                  </button>
+                  <button class="side-tab" data-panel="panelTools" role="tab">
+                    <span class="tab-ico">🔐</span>
+                    <span>Journal</span>
+                  </button>
+                  <button class="side-tab" data-panel="panelAwards" role="tab">
+                    <span class="tab-ico">🏆</span>
+                    <span>Badges</span>
+                  </button>
+                </nav>
 
-          <!-- Strict Focus Mode Controls -->
-          <h2>🔒 Strict Focus Guard</h2>
-          <p class="hint-sm">Enforces automatic <b>Fullscreen</b> and immediately <b>resets your timer</b> if you switch tabs or leave the window.</p>
-          <div class="field-row">
-            <label for="strictToggle">Enable Strict Focus (Fullscreen + Tab Reset)</label>
-            <input type="checkbox" id="strictToggle" />
-          </div>
-          <div class="strict-stats-row">
-            <span>Tab switch infractions caught: <b id="strictSwitchCount">0</b></span>
-            <button id="btnResetStrictStats" class="text-btn sm">Reset count</button>
-          </div>
-        </section>
+                <!-- ── 1. Audio & Music Panel ── -->
+                <section id="panelMusic" class="panel active">
+                  <div class="panel-header-row">
+                    <h2>🎧 Ambient Sound Studio</h2>
+                    <button id="btnMixStop" class="text-btn danger sm">■ Stop all</button>
+                  </div>
+                  <p class="hint-sm">Binaural procedural soundscapes for alpha wave focus.</p>
+                  <div class="mix-grid" id="mixGrid"><!-- Ambient sound sliders injected --></div>
 
-        <!-- ── 5. Awards & Badges Panel ── -->
-        <section id="panelAwards" class="panel">
-          <h2>🏆 Milestones & Achievements</h2>
-          <p class="hint-sm">Unlock badges as you log hours and maintain study streaks.</p>
-          <div id="badgeGrid" class="badge-grid"></div>
-        </section>
+                  <div class="section-divider"></div>
+
+                  <h2>🎵 Your Local Music</h2>
+                  <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="audioFile" accept="audio/*" multiple hidden />
+                    <div class="upload-icon">⚡</div>
+                    <p>Drop audio files or <b>browse</b> local tracks</p>
+                    <p class="hint-sm">Plays entirely offline in your browser</p>
+                  </div>
+                  <audio id="customPlayer" controls hidden></audio>
+                  <ul id="playlist" class="playlist"></ul>
+
+                  <div class="section-divider"></div>
+
+                  <h2>🟢 Spotify Integration</h2>
+                  <div class="spotify-row">
+                    <input id="spotifyUrl" type="url" placeholder="Paste Spotify playlist, album, or track URL…" />
+                    <button id="btnSpotify" class="ctrl-btn primary small">Embed</button>
+                  </div>
+                  <div id="spotifyEmbed" class="spotify-embed"></div>
+                </section>
+
+                <!-- ── 2. Co-Study Rooms Panel (YPT Style) ── -->
+                <section id="panelRoom" class="panel">
+                  <!-- Room Lobby -->
+                  <div id="roomLobby">
+                    <div class="panel-header-row">
+                      <h2>👥 Co-Study Live Rooms</h2>
+                      <span class="ypt-live-pulse-badge">🔴 P2P LIVE SYNC</span>
+                    </div>
+                    <p class="hint-sm">Study together in real-time. Share room codes across browsers &amp; tabs with instant live status syncing.</p>
+                    
+                    <div class="form-group" style="margin-top: 12px;">
+                      <label class="field-label" for="nicknameInput">Your Nickname</label>
+                      <input id="nicknameInput" class="txt-input" type="text" maxlength="16" placeholder="e.g. FocusMaster" />
+                    </div>
+
+                    <p class="field-label">Choose Study Avatar</p>
+                    <div id="avatarPicker" class="avatar-picker"></div>
+
+                    <div class="room-actions-grid">
+                      <button id="btnCreateRoom" class="ctrl-btn primary small">＋ Create New Room</button>
+                      <div class="join-row">
+                        <input id="joinCode" class="txt-input" type="text" maxlength="6" placeholder="ROOM CODE" />
+                        <button id="btnJoinRoom" class="ctrl-btn cyan small">Join Room</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Active Room View (YPT Style) -->
+                  <div id="roomView" hidden>
+                    <div class="ypt-room-header-card">
+                      <div class="room-head">
+                        <div>
+                          <span class="field-label-sm">ACTIVE STUDY ROOM</span>
+                          <div class="room-code-row">
+                            <span id="roomCode" class="room-code">—</span>
+                            <button id="btnCopyCode" class="icon-btn sm" title="Copy room code">📋 Copy</button>
+                            <button id="btnLeaveRoom" class="text-btn danger sm">Leave Room</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Top Status Summary Bar: Total Studying • On Break • Offline -->
+                      <div class="ypt-room-topbar" id="roomTopBar">
+                        <div class="ypt-status-pill pill-studying">
+                          <span class="status-indicator-dot dot-studying"></span>
+                          <span class="status-count-text"><strong id="countStudying">0</strong> Studying 🔥</span>
+                        </div>
+                        <div class="ypt-status-pill pill-break">
+                          <span class="status-indicator-dot dot-break"></span>
+                          <span class="status-count-text"><strong id="countBreak">0</strong> On Break ☕</span>
+                        </div>
+                        <div class="ypt-status-pill pill-offline">
+                          <span class="status-indicator-dot dot-offline"></span>
+                          <span class="status-count-text"><strong id="countOffline">0</strong> Offline 💤</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Connected Room Members YPT Cards Grid -->
+                    <div class="ypt-room-members-section">
+                      <div class="panel-header-row" style="margin-bottom: 8px;">
+                        <span class="field-label">STUDY MEMBERS · REAL-TIME SYNC</span>
+                        <span class="hint-sm" id="roomMemberCount">1 Member</span>
+                      </div>
+                      
+                      <div id="memberList" class="ypt-member-cards-grid">
+                        <!-- Dynamically injected YPT member cards -->
+                      </div>
+                      <p class="hint-sm" id="roomNote" style="margin-top:10px;text-align:center;">⚡ Real-time timer &amp; active subject sync across tabs &amp; browsers active.</p>
+                    </div>
+                  </div>
+
+                  <div class="section-divider"></div>
+
+                  <!-- Leaderboard -->
+                  <div class="panel-header-row">
+                    <h2>🏅 Focus Leaderboard</h2>
+                    <span class="chip" id="lbScope">Weekly</span>
+                  </div>
+                  <div class="seg" id="lbSeg">
+                    <button data-scope="week" class="active">Week</button>
+                    <button data-scope="month">Month</button>
+                    <button data-scope="all">All-time</button>
+                  </div>
+                  <ol id="leaderboard" class="leaderboard"></ol>
+                </section>
+
+                <!-- ── 3. Deep Analytics Panel ── -->
+                <section id="panelStats" class="panel">
+                  <h2>📊 Deep Focus Analytics</h2>
+                  <p class="hint-sm">Data-driven performance metrics &amp; time tracking.</p>
+
+                  <div class="stat-cards">
+                    <div class="stat-card">
+                      <span class="sc-label">TODAY</span>
+                      <span id="kpiToday" class="sc-value">0m</span>
+                    </div>
+                    <div class="stat-card">
+                      <span class="sc-label">THIS WEEK</span>
+                      <span id="kpiWeek" class="sc-value">0h</span>
+                    </div>
+                    <div class="stat-card">
+                      <span class="sc-label">THIS MONTH</span>
+                      <span id="kpiMonth" class="sc-value">0h</span>
+                    </div>
+                    <div class="stat-card">
+                      <span class="sc-label">ALL-TIME</span>
+                      <span id="kpiTotal" class="sc-value">0h</span>
+                    </div>
+                  </div>
+
+                  <div class="chart-header-row">
+                    <span class="field-label">Focus Distribution</span>
+                    <div class="seg sm" id="chartSeg">
+                      <button data-range="7" class="active">7D</button>
+                      <button data-range="14">14D</button>
+                      <button data-range="30">30D</button>
+                    </div>
+                  </div>
+                  <div class="chart-wrap">
+                    <canvas id="statsChart"></canvas>
+                  </div>
+
+                  <div class="section-divider"></div>
+
+                  <!-- Subject Breakdown -->
+                  <h2>📖 Subject Time Breakdown</h2>
+                  <div id="subjectBreakdown" class="subject-breakdown"></div>
+                </section>
+
+                <!-- ── 4. Personal Diary Panel (PIN Protected + Strict Mode) ── -->
+                <section id="panelTools" class="panel">
+
+                  <!-- ── Clean "My Personal Diary" Card (when locked) ── -->
+                  <div id="journalLockView" class="diary-cover-card">
+                    <div class="diary-cover-glow"></div>
+                    <div class="diary-cover-icon-wrap">
+                      <span class="diary-cover-icon">📖</span>
+                      <span class="diary-lock-badge">🔒</span>
+                    </div>
+                    <div class="diary-cover-info">
+                      <h3>My Personal Diary</h3>
+                      <p class="hint-sm">Private, password-protected journal for your daily thoughts, mood logs, study reflections &amp; milestones.</p>
+                    </div>
+                    <div class="diary-feature-tags">
+                      <span class="d-tag">🔒 PIN Protected</span>
+                      <span class="d-tag">🎨 Color Themes</span>
+                      <span class="d-tag">🧠 Study Tags</span>
+                      <span class="d-tag">✨ 100% Private</span>
+                    </div>
+                    <button id="btnOpenDiaryPinModal" class="ctrl-btn primary neon-glow-btn">
+                      <span>🔓 Open My Diary</span>
+                    </button>
+                  </div>
+
+                  <!-- ── Unlocked Diary View ── -->
+                  <div id="journalContentView" class="journal-content-view" hidden>
+                    <div class="panel-header-row">
+                      <h2>📖 My Personal Diary</h2>
+                      <div class="journal-head-actions">
+                        <button id="btnOpenPinModal" class="icon-btn sm" title="Change Security PIN">🔑 PIN</button>
+                        <button id="btnLockJournal" class="ctrl-btn ghost small" title="Lock Diary">🔒 Lock</button>
+                      </div>
+                    </div>
+
+                    <!-- Note Composer Form -->
+                    <div class="journal-composer">
+                      <input id="journalTitle" class="txt-input" type="text" maxlength="70" placeholder="Entry Title (e.g. Calculus Breakthrough, Life Insight, Daily Goal)" />
+                      
+                      <div class="journal-meta-row">
+                        <select id="journalCategory" class="txt-input meta-select" title="Study &amp; Reflection Tag">
+                          <option value="🧠 Study Reflection">🧠 Study Reflection</option>
+                          <option value="💡 Breakthrough Insight">💡 Breakthrough Insight</option>
+                          <option value="🎯 Goal &amp; Milestone">🎯 Goal &amp; Milestone</option>
+                          <option value="🌱 Personal Life">🌱 Personal Life</option>
+                          <option value="❤️ Daily Gratitude">❤️ Daily Gratitude</option>
+                          <option value="⚠️ Mistake &amp; Lesson">⚠️ Mistake &amp; Lesson</option>
+                          <option value="💭 Deep Thoughts">💭 Deep Thoughts</option>
+                          <option value="🚀 Creative Idea">🚀 Creative Idea</option>
+                        </select>
+
+                        <select id="journalMood" class="txt-input meta-select" title="Mood Selector">
+                          <option value="🌟 Inspired">🌟 Inspired</option>
+                          <option value="🧘 Calm &amp; Focused">🧘 Calm &amp; Focused</option>
+                          <option value="💡 Breakthrough">💡 Breakthrough</option>
+                          <option value="😊 Grateful &amp; Happy">😊 Grateful &amp; Happy</option>
+                          <option value="⚡ High Energy">⚡ High Energy</option>
+                          <option value="🌧️ Reflective">🌧️ Reflective</option>
+                          <option value="🔥 Unstoppable Flow">🔥 Unstoppable</option>
+                          <option value="😴 Tired but Proud">😴 Tired but Proud</option>
+                        </select>
+
+                        <select id="journalColor" class="txt-input meta-select theme-select" title="Custom Color Theme">
+                          <option value="violet">🟣 Midnight Violet</option>
+                          <option value="cyan">🔵 Electric Cyan</option>
+                          <option value="pink">🌸 Rose Quartz</option>
+                          <option value="emerald">🟢 Emerald Sage</option>
+                          <option value="amber">🟡 Sunset Amber</option>
+                          <option value="cosmic">🌌 Cosmic Indigo</option>
+                        </select>
+                      </div>
+
+                      <textarea id="journalText" class="txt-input journal-textarea" maxlength="1500" placeholder="What's on your mind? Record your study reflections, breakthroughs, mindset shifts, or personal lessons..."></textarea>
+                      
+                      <div class="journal-form-actions">
+                        <button id="btnSaveJournal" class="ctrl-btn primary small">＋ Save Diary Entry</button>
+                        <button id="btnResetJournal" class="text-btn danger sm">Clear text</button>
+                      </div>
+                    </div>
+
+                    <!-- Search & Filters -->
+                    <div class="journal-filter-bar">
+                      <input id="journalSearch" class="txt-input sm" type="text" placeholder="🔍 Search reflections, tags, moods..." />
+                      <span id="journalCount" class="chip">0 entries</span>
+                    </div>
+
+                    <!-- Notes List -->
+                    <ul id="journalList" class="journal-list"></ul>
+                  </div>
+
+                  <div class="section-divider"></div>
+
+                  <!-- Strict Focus Mode Controls -->
+                  <h2>🔒 Strict Focus Guard</h2>
+                  <p class="hint-sm">Enforces automatic <b>Fullscreen</b> and immediately <b>resets your timer</b> if you switch tabs or leave the window.</p>
+                  <div class="field-row">
+                    <label for="strictToggle">Enable Strict Focus (Fullscreen + Tab Reset)</label>
+                    <input type="checkbox" id="strictToggle" />
+                  </div>
+                  <div class="strict-stats-row">
+                    <span>Tab switch infractions caught: <b id="strictSwitchCount">0</b></span>
+                    <button id="btnResetStrictStats" class="text-btn sm">Reset count</button>
+                  </div>
+                </section>
+
+                <!-- ── 5. Awards & Badges Panel ── -->
+                <section id="panelAwards" class="panel">
+                  <h2>🏆 Milestones &amp; Achievements</h2>
+                  <p class="hint-sm">Unlock badges as you log hours and maintain study streaks.</p>
+                  <div id="badgeGrid" class="badge-grid"></div>
+                </section>
+
+              </div>
+
+            </div>
+          </div>
 
         </div>
-      </aside>
+      </section>
+
     </main>
 
     <!-- ── Comprehensive SEO Guide & Knowledge Hub (800-1200 Words) ── -->
